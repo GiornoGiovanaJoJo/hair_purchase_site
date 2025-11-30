@@ -10,6 +10,11 @@ import asyncio
 import logging
 from pathlib import Path
 
+# Устанавливаем UTF-8 для Windows
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 # Добавляем корневую директорию проекта в sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
@@ -19,9 +24,9 @@ try:
     from dotenv import load_dotenv
     env_path = BASE_DIR / '.env'
     load_dotenv(dotenv_path=env_path)
-    print(f"✅ .env загружен из: {env_path}")
+    print(f"[OK] .env загружен из: {env_path}")
 except ImportError:
-    print("⚠️ python-dotenv не установлен. Установите: pip install python-dotenv")
+    print("[WARNING] python-dotenv не установлен. Установите: pip install python-dotenv")
     print("Пытаюсь продолжить без .env...")
 
 # Настраиваем Django окружение
@@ -31,6 +36,7 @@ import django
 django.setup()
 
 from aiogram import Bot, Dispatcher, types, F
+from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
@@ -40,7 +46,10 @@ from hair_app.models import HairApplication
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
 )
 logger = logging.getLogger(__name__)
 
@@ -49,21 +58,25 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 ADMIN_CHAT_ID = os.getenv('TELEGRAM_ADMIN_CHAT_ID')
 
 if not TOKEN:
-    logger.error("❌ TELEGRAM_BOT_TOKEN не найден!")
+    logger.error("[ERROR] TELEGRAM_BOT_TOKEN не найден!")
     logger.error("Проверь файл .env и убедись, что переменная установлена:")
     logger.error("TELEGRAM_BOT_TOKEN=твой_токен_от_BotFather")
     sys.exit(1)
 
 if not ADMIN_CHAT_ID:
-    logger.error("❌ TELEGRAM_ADMIN_CHAT_ID не найден!")
+    logger.error("[ERROR] TELEGRAM_ADMIN_CHAT_ID не найден!")
     logger.error("Проверь файл .env и убедись, что переменная установлена:")
     logger.error("TELEGRAM_ADMIN_CHAT_ID=твой_chat_id")
     sys.exit(1)
 
-logger.info(f"✅ Токен бота: {TOKEN[:20]}...")
-logger.info(f"✅ Admin Chat ID: {ADMIN_CHAT_ID}")
+logger.info(f"[OK] Токен бота: {TOKEN[:20]}...")
+logger.info(f"[OK] Admin Chat ID: {ADMIN_CHAT_ID}")
 
-bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
+# Инициализация бота с новым синтаксисом aiogram 3.7.0+
+bot = Bot(
+    token=TOKEN,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+)
 dp = Dispatcher()
 
 # ====================
@@ -319,7 +332,7 @@ async def send_new_application_notification(app_id: int):
 
 async def main():
     """Главная функция запуска бота"""
-    logger.info("🤖 Бот запущен!")
+    logger.info("[BOT] Бот запущен!")
     
     try:
         # Удаляем старые апдейты
@@ -331,14 +344,16 @@ async def main():
                 chat_id=ADMIN_CHAT_ID,
                 text="🚀 <b>Бот запущен и готов к работе!</b>\n\nОтправь /start для просмотра команд."
             )
+            logger.info("[BOT] Уведомление о запуске отправлено админу")
         except Exception as e:
-            logger.warning(f"Не удалось отправить сообщение админу: {e}")
+            logger.warning(f"[BOT] Не удалось отправить сообщение админу: {e}")
         
         # Запускаем polling
+        logger.info("[BOT] Запуск polling...")
         await dp.start_polling(bot)
         
     except Exception as e:
-        logger.error(f"Ошибка при запуске бота: {e}")
+        logger.error(f"[BOT] Ошибка при запуске бота: {e}")
     finally:
         await bot.session.close()
 
@@ -346,4 +361,4 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("🛑 Бот остановлен")
+        logger.info("[BOT] Бот остановлен")
