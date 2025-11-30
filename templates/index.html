@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Скупка натуральных волос | Дорого</title>
-    <meta name="description" content="Продайте свои волосы дорого. Быстрая оценка и выкуп натуральных волос.">
+    <meta name="description" content="Продайте свои волосы дорого и быстро.">
     <link rel="stylesheet" href="/static/css/style.css">
     
     {% if YANDEX_METRIKA_ID %}
@@ -295,7 +295,7 @@
             </div>
             
             <div class="calculator-container">
-                <form id="applicationForm" class="application-form">
+                <form id="applicationForm" class="application-form" enctype="multipart/form-data">
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="fullName">Ваше имя *</label>
@@ -304,7 +304,7 @@
 
                         <div class="form-group">
                             <label for="phone">Телефон *</label>
-                            <input type="tel" id="phone" name="phone" required placeholder="+7 (999) 123-45-67" pattern="[+]?[0-9]{1,4}?[-\s]?[(]?[0-9]{1,3}[)]?[-\s]?[0-9]{1,4}[-\s]?[0-9]{1,4}[-\s]?[0-9]{1,9}">
+                            <input type="tel" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
                         </div>
 
                         <div class="form-group">
@@ -329,19 +329,50 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label for="hairPhotos">Фотографии волос *</label>
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <input type="file" id="hairPhotos" name="photos" multiple accept="image/*" required>
-                            <div class="upload-placeholder">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <p>Нажмите или перетащите фото</p>
-                                <span>Можно загрузить несколько фотографий</span>
+                        <label>Фотографии волос *</label>
+                        <div class="upload-grid">
+                            <div class="upload-card">
+                                <input type="file" id="photo1" name="photo1" accept="image/*" required class="file-input">
+                                <label for="photo1" class="file-label">
+                                    <div class="upload-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                    <span>Фото 1 *</span>
+                                </label>
+                                <div class="preview" data-preview="photo1"></div>
                             </div>
-                            <div id="photoPreview" class="photo-preview"></div>
+                            <div class="upload-card">
+                                <input type="file" id="photo2" name="photo2" accept="image/*" class="file-input">
+                                <label for="photo2" class="file-label">
+                                    <div class="upload-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                    <span>Фото 2</span>
+                                </label>
+                                <div class="preview" data-preview="photo2"></div>
+                            </div>
+                            <div class="upload-card">
+                                <input type="file" id="photo3" name="photo3" accept="image/*" class="file-input">
+                                <label for="photo3" class="file-label">
+                                    <div class="upload-icon">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                    <span>Фото 3</span>
+                                </label>
+                                <div class="preview" data-preview="photo3"></div>
+                            </div>
                         </div>
                     </div>
 
