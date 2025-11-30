@@ -37,6 +37,13 @@
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
             </button>
+            <button class="nav-btn" data-section="gallery">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+            </button>
             <button class="nav-btn" data-section="calculator">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="4" y="2" width="16" height="20" rx="2"></rect>
@@ -103,7 +110,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">💰</div>
                     <h3>Высокие цены</h3>
-                    <p>Лучшие цены на рынке за натуральные волосы</p>
+                    <p>От 5 000 до 50 000 ₽ за натуральные волосы</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
@@ -115,6 +122,78 @@
                     <h3>Надежность</h3>
                     <p>Работаем прозрачно и честно с каждым клиентом</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Секция: Галерея примеров -->
+        <section id="gallery" class="section">
+            <div class="section-header">
+                <h2>📸 Примеры волос</h2>
+                <p>Мы принимаем натуральные волосы разных типов и цветов</p>
+            </div>
+
+            <div class="gallery-container">
+                <div class="price-category">
+                    <div class="category-header">
+                        <h3>💎 Премиум класс</h3>
+                        <span class="price-range">25 000 - 50 000 ₽</span>
+                    </div>
+                    <div class="category-features">
+                        <div class="feature-item">✓ Длина от 70 см</div>
+                        <div class="feature-item">✓ Натуральный блонд или светло-русые</div>
+                        <div class="feature-item">✓ Славянка (тонкие)</div>
+                        <div class="feature-item">✓ Не окрашенные</div>
+                    </div>
+                    <div class="example-image">
+                        <div class="placeholder-image" style="background: linear-gradient(135deg, #f5d76e 0%, #f7ca18 100%);">
+                            <span>🌟 Блонд премиум</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="price-category">
+                    <div class="category-header">
+                        <h3>⭐ Высокий класс</h3>
+                        <span class="price-range">15 000 - 25 000 ₽</span>
+                    </div>
+                    <div class="category-features">
+                        <div class="feature-item">✓ Длина от 60 см</div>
+                        <div class="feature-item">✓ Светло-русые или русые</div>
+                        <div class="feature-item">✓ Средней структуры</div>
+                        <div class="feature-item">✓ Не окрашенные или слабо окрашенные</div>
+                    </div>
+                    <div class="example-image">
+                        <div class="placeholder-image" style="background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);">
+                            <span>✨ Русые</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="price-category">
+                    <div class="category-header">
+                        <h3>💫 Стандарт класс</h3>
+                        <span class="price-range">5 000 - 15 000 ₽</span>
+                    </div>
+                    <div class="category-features">
+                        <div class="feature-item">✓ Длина от 40 см</div>
+                        <div class="feature-item">✓ Темно-русые или темные</div>
+                        <div class="feature-item">✓ Густые</div>
+                        <div class="feature-item">✓ Окрашенные (легкое окрашивание)</div>
+                    </div>
+                    <div class="example-image">
+                        <div class="placeholder-image" style="background: linear-gradient(135deg, #6b4423 0%, #4a2c2a 100%);">
+                            <span>💫 Темные</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-block">
+                <h4>⚠️ Важная информация</h4>
+                <p>• Волосы должны быть чистыми и сухими</p>
+                <p>• Срез должен быть ровным (не секущиеся концы)</p>
+                <p>• Волосы должны быть собраны в хвост или косу</p>
+                <p>• Не принимаем волосы после химической завивки</p>
             </div>
         </section>
 
@@ -130,27 +209,27 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Длина волос *</label>
-                            <select name="length" required>
+                            <select name="length" required id="lengthSelect">
                                 <option value="">Выберите длину</option>
-                                <option value="40-50">40-50 см</option>
-                                <option value="50-60">50-60 см</option>
-                                <option value="60-70">60-70 см</option>
-                                <option value="70-80">70-80 см</option>
-                                <option value="80-90">80-90 см</option>
-                                <option value="90-100">90-100 см</option>
-                                <option value="100+">Более 100 см</option>
+                                <option value="40-50" data-image="short">40-50 см</option>
+                                <option value="50-60" data-image="medium">50-60 см</option>
+                                <option value="60-70" data-image="long">60-70 см</option>
+                                <option value="70-80" data-image="verylong">70-80 см</option>
+                                <option value="80-90" data-image="verylong">80-90 см</option>
+                                <option value="90-100" data-image="verylong">90-100 см</option>
+                                <option value="100+" data-image="verylong">Более 100 см</option>
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label>Цвет волос *</label>
-                            <select name="color" required>
+                            <select name="color" required id="colorSelect">
                                 <option value="">Выберите цвет</option>
-                                <option value="blonde">Блонд (светлые)</option>
-                                <option value="light">Светло-русые</option>
-                                <option value="medium">Русые</option>
-                                <option value="dark">Темно-русые</option>
-                                <option value="brown">Темные (каштановые)</option>
+                                <option value="blonde" data-image="blonde">Блонд (светлые)</option>
+                                <option value="light" data-image="light">Светло-русые</option>
+                                <option value="medium" data-image="medium">Русые</option>
+                                <option value="dark" data-image="dark">Темно-русые</option>
+                                <option value="brown" data-image="brown">Темные (каштановые)</option>
                             </select>
                         </div>
 
@@ -175,6 +254,11 @@
                         </div>
                     </div>
 
+                    <div id="hairPreview" class="hair-preview hidden">
+                        <div class="preview-label">Предварительный образец:</div>
+                        <div id="previewImage" class="preview-image"></div>
+                    </div>
+
                     <button type="submit" class="btn-primary btn-large">
                         <span class="btn-text">Рассчитать стоимость</span>
                         <span class="btn-loader hidden">
@@ -188,8 +272,12 @@
 
                 <div id="priceResult" class="price-result hidden">
                     <div class="price-badge">
-                        <span class="price-label">Предварительная стоимость:</span>
-                        <span class="price-value" id="estimatedPrice">0 ₽</span>
+                        <span class="price-label">Ориентировочная стоимость:</span>
+                        <div class="price-range-display">
+                            <span class="price-min" id="priceMin">0</span>
+                            <span class="price-separator">—</span>
+                            <span class="price-max" id="priceMax">0</span>
+                        </div>
                     </div>
                     <p class="price-note">* Точная цена определяется после осмотра волос</p>
                     <button class="btn-secondary" onclick="scrollToSection('application')">
@@ -205,8 +293,77 @@
                 <h2>📝 Оставить заявку</h2>
                 <p>Заполните форму, и мы свяжемся с вами в ближайшее время</p>
             </div>
+            
             <div class="calculator-container">
-                <p style="text-align: center; color: #b0b0b0;">Форма заявки будет добавлена в следующем обновлении. Пока доступен API: <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
+                <form id="applicationForm" class="application-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="fullName">Ваше имя *</label>
+                            <input type="text" id="fullName" name="full_name" required placeholder="Введите ваше имя">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Телефон *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="+7 (999) 123-45-67" pattern="[+]?[0-9]{1,4}?[-\s]?[(]?[0-9]{1,3}[)]?[-\s]?[0-9]{1,4}[-\s]?[0-9]{1,4}[-\s]?[0-9]{1,9}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="example@mail.ru">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="city">Город</label>
+                            <input type="text" id="city" name="city" placeholder="Москва">
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="hairLength">Длина волос (см)</label>
+                        <input type="number" id="hairLength" name="hair_length" min="20" max="150" placeholder="60">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="hairDescription">Описание волос</label>
+                        <textarea id="hairDescription" name="hair_description" rows="4" placeholder="Опишите цвет, структуру, состояние волос..."></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="hairPhotos">Фотографии волос *</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="hairPhotos" name="photos" multiple accept="image/*" required>
+                            <div class="upload-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p>Нажмите или перетащите фото</p>
+                                <span>Можно загрузить несколько фотографий</span>
+                            </div>
+                            <div id="photoPreview" class="photo-preview"></div>
+                        </div>
+                    </div>
+
+                    <div id="formMessage" class="form-message hidden"></div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <span class="btn-text">Отправить заявку</span>
+                        <span class="btn-loader hidden">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+                                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                            </svg>
+                            Отправка...
+                        </span>
+                    </button>
+                </form>
+
+                <div id="successMessage" class="success-message hidden">
+                    <div class="success-icon">✅</div>
+                    <h3>Заявка успешно отправлена!</h3>
+                    <p>Мы свяжемся с вами в ближайшее время для уточнения деталей.</p>
+                    <button class="btn-secondary" onclick="resetApplicationForm()">Отправить еще одну заявку</button>
+                </div>
             </div>
         </section>
     </main>
@@ -214,6 +371,7 @@
     <!-- Кнопки навигации по секциям -->
     <div class="section-dots">
         <button class="dot active" data-section="home" title="Главная"></button>
+        <button class="dot" data-section="gallery" title="Примеры"></button>
         <button class="dot" data-section="calculator" title="Калькулятор"></button>
         <button class="dot" data-section="application" title="Заявка"></button>
     </div>
