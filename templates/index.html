@@ -27,7 +27,6 @@
     {% endif %}
 </head>
 <body>
-    {% csrf_token %}
     <!-- Боковая панель навигации -->
     <nav class="sidebar">
         <div class="nav-group">
@@ -296,40 +295,72 @@
             
             <div class="calculator-container">
                 <form id="applicationForm" class="application-form" enctype="multipart/form-data">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="fullName">Ваше имя *</label>
-                            <input type="text" id="fullName" name="full_name" required placeholder="Введите ваше имя">
+                    <!-- Характеристики волос -->
+                    <div class="form-section">
+                        <h3>📏 Характеристики волос</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="length">Длина волос *</label>
+                                <select name="length" id="length" required>
+                                    <option value="">Выберите длину</option>
+                                    <option value="40-50">40-50 см</option>
+                                    <option value="50-60">50-60 см</option>
+                                    <option value="60-70">60-70 см</option>
+                                    <option value="70-80">70-80 см</option>
+                                    <option value="80-90">80-90 см</option>
+                                    <option value="90-100">90-100 см</option>
+                                    <option value="100+">Более 100 см</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="color">Цвет волос *</label>
+                                <select name="color" id="color" required>
+                                    <option value="">Выберите цвет</option>
+                                    <option value="blonde">Блонд (светлые)</option>
+                                    <option value="light">Светло-русые</option>
+                                    <option value="medium">Русые</option>
+                                    <option value="dark">Темно-русые</option>
+                                    <option value="brown">Темные (каштановые)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="structure">Структура волос *</label>
+                                <select name="structure" id="structure" required>
+                                    <option value="">Выберите структуру</option>
+                                    <option value="thin">Славянка (тонкие)</option>
+                                    <option value="medium">Средние</option>
+                                    <option value="thick">Густые</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="age">Возраст *</label>
+                                <select name="age" id="age" required>
+                                    <option value="">Выберите возраст</option>
+                                    <option value="child">Детские (до 14 лет)</option>
+                                    <option value="adult">Взрослые (14+ лет)</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="phone">Телефон *</label>
-                            <input type="tel" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" placeholder="example@mail.ru">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="city">Город</label>
-                            <input type="text" id="city" name="city" placeholder="Москва">
+                        <div class="form-group full-width">
+                            <label for="condition">Состояние волос *</label>
+                            <select name="condition" id="condition" required>
+                                <option value="">Выберите состояние</option>
+                                <option value="natural">Натуральные (не окрашенные)</option>
+                                <option value="dyed">Окрашенные</option>
+                                <option value="perm">После химической завивки</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="form-group full-width">
-                        <label for="hairLength">Длина волос (см)</label>
-                        <input type="number" id="hairLength" name="hair_length" min="20" max="150" placeholder="60">
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label for="hairDescription">Описание волос</label>
-                        <textarea id="hairDescription" name="hair_description" rows="4" placeholder="Опишите цвет, структуру, состояние волос..."></textarea>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label>Фотографии волос *</label>
+                    <!-- Фотографии волос -->
+                    <div class="form-section">
+                        <h3>📸 Фотографии волос</h3>
+                        <p class="section-note">Загрузите минимум 1 фотографию (обязательно)</p>
+                        
                         <div class="upload-grid">
                             <div class="upload-card">
                                 <input type="file" id="photo1" name="photo1" accept="image/*" required class="file-input">
@@ -373,6 +404,37 @@
                                 </label>
                                 <div class="preview" data-preview="photo3"></div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Контактные данные -->
+                    <div class="form-section">
+                        <h3>👤 Контактные данные</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="name">Ваше имя *</label>
+                                <input type="text" id="name" name="name" required placeholder="Введите ваше имя">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">Телефон *</label>
+                                <input type="tel" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" placeholder="example@mail.ru">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city">Город</label>
+                                <input type="text" id="city" name="city" placeholder="Москва">
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="comment">Комментарий</label>
+                            <textarea id="comment" name="comment" rows="4" placeholder="Дополнительная информация о ваших волосах..."></textarea>
                         </div>
                     </div>
 
