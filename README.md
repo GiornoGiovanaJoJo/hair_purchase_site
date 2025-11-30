@@ -126,6 +126,93 @@ hair_purchase_site/
 
 ---
 
+## Решение проблем
+
+### Ошибка 403 CSRF Failed
+
+**Причина:** Django требует CSRF-токен для защиты от атак.
+
+**Решение:**
+1. Обновите код из репозитория:
+```bash
+git pull
+```
+
+2. Пересоберите статику:
+```bash
+python manage.py collectstatic --noinput
+```
+
+3. Перезапустите сервер:
+```bash
+python manage.py runserver
+```
+
+4. Обновите страницу в браузере (Ctrl+F5)
+
+### Ошибка 404 на static/images/hero.jpg
+
+**Причина:** Отсутствует файл изображения.
+
+**Решение:**
+1. Создайте папку:
+```bash
+mkdir -p static/images
+```
+
+2. Положите любое изображение и назовите `hero.jpg`
+
+3. Пересоберите статику:
+```bash
+python manage.py collectstatic --noinput
+```
+
+4. Обновите страницу в браузере (Ctrl+F5)
+
+**Примечание:** Если файла нет, автоматически появится SVG-заглушка с текстом.
+
+### Калькулятор не работает
+
+1. Откройте DevTools (клавиша F12)
+2. Перейдите на вкладку Network
+3. Попробуйте рассчитать стоимость
+4. Проверьте, что запрос к `/api/calculator/` вернул 200 OK
+
+Если видите 403 — смотрите решение выше.
+
+---
+
+## Развертывание на продакшене
+
+### Важные пункты:
+
+1. **Отключите DEBUG:**
+```python
+# config/settings.py
+DEBUG = False
+ALLOWED_HOSTS = ['ваш-домен.ru', 'www.ваш-домен.ru']
+```
+
+2. **Используйте надежный SECRET_KEY:**
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+Копируйте результат в .env
+
+3. **Настройте статику:**
+```bash
+python manage.py collectstatic --noinput
+```
+
+4. **Используйте Gunicorn или uWSGI вместо runserver:**
+```bash
+gunicorn config.wsgi:application --bind 0.0.0.0:8000
+```
+
+5. **Настройте Nginx для раздачи статики**
+
+---
+
 API и админ-панель действуют по-прежнему. Telegram-бот и backend не затрагивались.
 
 Все вопросы — в Issues или Telegram.
