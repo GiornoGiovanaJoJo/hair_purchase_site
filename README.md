@@ -215,4 +215,4 @@ gunicorn config.wsgi:application --bind 0.0.0.0:8000
 
 API и админ-панель действуют по-прежнему. Telegram-бот и backend не затрагивались.
 
-Все вопросы — в Issues или Telegram.
+Все вопросы — в Issues или Telegram."" 
