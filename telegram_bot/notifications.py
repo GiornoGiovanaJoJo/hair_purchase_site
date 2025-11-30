@@ -44,13 +44,13 @@ def send_application_notification(application_id: int) -> bool:
 
 async def _send_notification(application_id: int):
     """Внутренняя асинхронная функция отправки"""
-    from hair_app.models import Application
+    from hair_app.models import HairApplication
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     
     bot = Bot(token=TELEGRAM_BOT_TOKEN, parse_mode=ParseMode.HTML)
     
     try:
-        app = Application.objects.get(id=application_id)
+        app = HairApplication.objects.get(id=application_id)
         
         # Формируем текст уведомления
         text = (
@@ -116,7 +116,7 @@ async def _send_notification(application_id: int):
         
         logger.info(f"✅ Уведомление о заявке #{application_id} отправлено")
         
-    except Application.DoesNotExist:
+    except HairApplication.DoesNotExist:
         logger.error(f"Заявка #{application_id} не найдена")
     except Exception as e:
         logger.error(f"Ошибка при отправке уведомления: {e}")
