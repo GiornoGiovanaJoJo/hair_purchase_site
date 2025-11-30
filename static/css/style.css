@@ -1,0 +1,474 @@
+/* ===== ОСНОВНЫЕ СТИЛИ ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #e74c3c;
+    --primary-dark: #c0392b;
+    --secondary-color: #3498db;
+    --dark-bg: #1a1a1a;
+    --dark-card: #2d2d2d;
+    --dark-hover: #3a3a3a;
+    --text-light: #ffffff;
+    --text-gray: #b0b0b0;
+    --sidebar-width: 80px;
+    --border-radius: 20px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-light);
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+/* ===== БОКОВАЯ ПАНЕЛЬ НАВИГАЦИИ ===== */
+.sidebar {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    bottom: 20px;
+    width: var(--sidebar-width);
+    background: var(--dark-card);
+    border-radius: var(--border-radius);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-bottom {
+    margin-bottom: 10px;
+}
+
+.nav-btn, .nav-btn-round {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: transparent;
+    color: var(--text-gray);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.nav-btn-round {
+    border-radius: 50%;
+}
+
+.nav-btn:hover, .nav-btn-round:hover {
+    background: var(--dark-hover);
+    color: var(--text-light);
+    transform: scale(1.05);
+}
+
+.nav-btn.active {
+    background: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+}
+
+.nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: -10px;
+    width: 4px;
+    height: 24px;
+    background: var(--primary-color);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Переключатель языка */
+.lang-switch {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.lang {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-gray);
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 2px 0;
+}
+
+.lang:hover {
+    color: var(--text-light);
+}
+
+.lang.active {
+    color: var(--primary-color);
+}
+
+/* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+.main-content {
+    margin-left: calc(var(--sidebar-width) + 40px);
+    margin-right: 20px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.section {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== HERO СЕКЦИЯ ===== */
+.hero {
+    position: relative;
+    height: 85vh;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(231,76,60,0.3) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 50px;
+    width: fit-content;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge-text {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.badge-number {
+    background: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.hero-title {
+    font-size: 4rem;
+    font-weight: 900;
+    margin-bottom: 20px;
+    line-height: 1.1;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    color: var(--text-gray);
+    margin-bottom: 40px;
+    max-width: 600px;
+}
+
+/* ===== КНОПКИ ===== */
+.btn-primary, .btn-secondary {
+    padding: 16px 32px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: var(--text-light);
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(231, 76, 60, 0.6);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-light);
+    border: 2px solid var(--text-light);
+}
+
+.btn-secondary:hover {
+    background: var(--text-light);
+    color: var(--dark-bg);
+}
+
+.btn-large {
+    padding: 18px 40px;
+    font-size: 18px;
+    width: 100%;
+}
+
+/* ===== КАРТОЧКИ ПРЕИМУЩЕСТВ ===== */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.feature-card {
+    background: var(--dark-card);
+    padding: 40px 30px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.feature-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(231, 76, 60, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: var(--text-gray);
+    line-height: 1.6;
+}
+
+/* ===== ЗАГОЛОВОК СЕКЦИИ ===== */
+.section-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.section-header h2 {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.section-header p {
+    font-size: 1.2rem;
+    color: var(--text-gray);
+}
+
+/* ===== КАЛЬКУЛЯТОР ===== */
+.calculator-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--dark-card);
+    padding: 60px 40px;
+    border-radius: var(--border-radius);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== ИНДИКАТОРЫ СЕКЦИЙ ===== */
+.section-dots {
+    position: fixed;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0;
+}
+
+.dot:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.2);
+}
+
+.dot.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.2);
+}
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 1024px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 60px;
+    }
+
+    .sidebar {
+        left: 10px;
+        width: var(--sidebar-width);
+        padding: 15px 0;
+    }
+
+    .nav-btn, .nav-btn-round {
+        width: 40px;
+        height: 40px;
+    }
+
+    .main-content {
+        margin-left: calc(var(--sidebar-width) + 20px);
+        margin-right: 10px;
+        padding: 10px;
+    }
+
+    .hero {
+        height: 70vh;
+    }
+
+    .hero-content {
+        padding: 30px;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .section-header h2 {
+        font-size: 2rem;
+    }
+
+    .section-dots {
+        right: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== УТИЛИТЫ ===== */
+.hidden {
+    display: none !important;
+}
+
+/* ===== СКРОЛЛБАР ===== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--dark-hover);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
