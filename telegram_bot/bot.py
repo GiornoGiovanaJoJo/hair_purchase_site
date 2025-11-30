@@ -25,7 +25,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
 from django.conf import settings
-from hair_app.models import Application
+from hair_app.models import HairApplication
 
 # Настройка логирования
 logging.basicConfig(
@@ -71,7 +71,7 @@ async def cmd_start(message: types.Message):
 @dp.message(Command("new"))
 async def cmd_new_applications(message: types.Message):
     """Показать новые заявки"""
-    new_apps = Application.objects.filter(status='new').order_by('-created_at')[:5]
+    new_apps = HairApplication.objects.filter(status='new').order_by('-created_at')[:5]
     
     if not new_apps:
         await message.answer("📋 <b>Новых заявок нет</b>")
@@ -88,7 +88,7 @@ async def cmd_new_applications(message: types.Message):
 @dp.message(Command("all"))
 async def cmd_all_applications(message: types.Message):
     """Показать все заявки"""
-    all_apps = Application.objects.all().order_by('-created_at')[:10]
+    all_apps = HairApplication.objects.all().order_by('-created_at')[:10]
     
     if not all_apps:
         await message.answer("📋 <b>Заявок нет</b>")
@@ -105,11 +105,11 @@ async def cmd_all_applications(message: types.Message):
 @dp.message(Command("stats"))
 async def cmd_stats(message: types.Message):
     """Показать статистику"""
-    total = Application.objects.count()
-    new = Application.objects.filter(status='new').count()
-    in_progress = Application.objects.filter(status='in_progress').count()
-    completed = Application.objects.filter(status='completed').count()
-    rejected = Application.objects.filter(status='rejected').count()
+    total = HairApplication.objects.count()
+    new = HairApplication.objects.filter(status='new').count()
+    in_progress = HairApplication.objects.filter(status='in_progress').count()
+    completed = HairApplication.objects.filter(status='completed').count()
+    rejected = HairApplication.objects.filter(status='rejected').count()
     
     text = (
         "📊 <b>Статистика заявок:</b>\n\n"
@@ -132,8 +132,8 @@ async def process_application_callback(callback: types.CallbackQuery):
     action, app_id = callback.data.split("_", 1)
     
     try:
-        app = Application.objects.get(id=app_id)
-    except Application.DoesNotExist:
+        app = HairApplication.objects.get(id=app_id)
+    except HairApplication.DoesNotExist:
         await callback.answer("❌ Заявка не найдена", show_alert=True)
         return
     
@@ -174,7 +174,7 @@ async def process_application_callback(callback: types.CallbackQuery):
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # ====================
 
-def format_application_short(app: Application) -> str:
+def format_application_short(app: HairApplication) -> str:
     """Краткое описание заявки"""
     status_emoji = {
         'new': '🆕',
@@ -196,7 +196,7 @@ def format_application_short(app: Application) -> str:
     
     return text
 
-def format_application_full(app: Application) -> str:
+def format_application_full(app: HairApplication) -> str:
     """Полное описание заявки"""
     status_text = app.get_status_display()
     
@@ -248,7 +248,7 @@ async def send_new_application_notification(app_id: int):
     Эту функцию нужно вызвать из Django view после создания заявки.
     """
     try:
-        app = Application.objects.get(id=app_id)
+        app = HairApplication.objects.get(id=app_id)
         
         text = (
             "🆕 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
@@ -291,7 +291,7 @@ async def send_new_application_notification(app_id: int):
         
         logger.info(f"Уведомление о заявке #{app_id} отправлено")
         
-    except Application.DoesNotExist:
+    except HairApplication.DoesNotExist:
         logger.error(f"Заявка #{app_id} не найдена")
     except Exception as e:
         logger.error(f"Ошибка при отправке уведомления: {e}")
