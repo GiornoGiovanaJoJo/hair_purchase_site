@@ -1,6 +1,7 @@
 """
 Views for hair purchase application
 """
+import logging
 from django.shortcuts import render
 from django.core.mail import send_mail
 from django.conf import settings
@@ -17,6 +18,8 @@ from .serializers import (
     PriceListSerializer
 )
 from .utils import calculate_hair_price
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -43,34 +46,47 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
         """
         Save application and calculate estimated price.
         """
-        # Calculate estimated price
-        estimated_price = calculate_hair_price(
-            length=serializer.validated_data['length'],
-            color=serializer.validated_data['color'],
-            structure=serializer.validated_data['structure'],
-            condition=serializer.validated_data['condition']
-        )
-        
-        # Save application
-        application = serializer.save(estimated_price=estimated_price)
-        
-        # Send email notification to admin
         try:
-            send_mail(
-                subject=f'Новая заявка #{application.id}',
-                message=f'Получена новая заявка на продажу волос.\n\n'
-                        f'Имя: {application.name}\n'
-                        f'Телефон: {application.phone}\n'
-                        f'Длина: {application.get_length_display()}\n'
-                        f'Цвет: {application.get_color_display()}\n'
-                        f'Предварительная цена: {application.estimated_price} руб.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.ADMIN_EMAIL],
-                fail_silently=True,
+            # Log incoming data for debugging
+            logger.info(f"Creating hair application with data: {self.request.data}")
+            
+            # Calculate estimated price
+            estimated_price = calculate_hair_price(
+                length=serializer.validated_data['length'],
+                color=serializer.validated_data['color'],
+                structure=serializer.validated_data['structure'],
+                condition=serializer.validated_data['condition']
             )
+            
+            logger.info(f"Calculated estimated price: {estimated_price}")
+            
+            # Save application
+            application = serializer.save(estimated_price=estimated_price)
+            
+            logger.info(f"Application created successfully with ID: {application.id}")
+            
+            # Send email notification to admin
+            try:
+                send_mail(
+                    subject=f'Новая заявка #{application.id}',
+                    message=f'Получена новая заявка на продажу волос.\n\n'
+                            f'Имя: {application.name}\n'
+                            f'Телефон: {application.phone}\n'
+                            f'Длина: {application.get_length_display()}\n'
+                            f'Цвет: {application.get_color_display()}\n'
+                            f'Предварительная цена: {application.estimated_price} руб.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.ADMIN_EMAIL],
+                    fail_silently=True,
+                )
+                logger.info(f"Email notification sent for application #{application.id}")
+            except Exception as e:
+                # Log error but don't fail the request
+                logger.error(f'Error sending email for application #{application.id}: {e}')
+                
         except Exception as e:
-            # Log error but don't fail the request
-            print(f'Error sending email: {e}')
+            logger.error(f'Error creating hair application: {e}', exc_info=True)
+            raise
 
 
 @extend_schema(
@@ -83,21 +99,34 @@ def calculate_price(request):
     """
     Calculate hair price based on characteristics.
     """
-    serializer = PriceCalculatorSerializer(data=request.data)
-    
-    if serializer.is_valid():
-        estimated_price = calculate_hair_price(
-            length=serializer.validated_data['length'],
-            color=serializer.validated_data['color'],
-            structure=serializer.validated_data['structure'],
-            condition=serializer.validated_data['condition']
-        )
+    try:
+        logger.info(f"Calculating price with data: {request.data}")
         
-        return Response({
-            'estimated_price': estimated_price
-        })
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PriceCalculatorSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            estimated_price = calculate_hair_price(
+                length=serializer.validated_data['length'],
+                color=serializer.validated_data['color'],
+                structure=serializer.validated_data['structure'],
+                condition=serializer.validated_data['condition']
+            )
+            
+            logger.info(f"Calculated price: {estimated_price}")
+            
+            return Response({
+                'estimated_price': float(estimated_price)
+            })
+        
+        logger.warning(f"Price calculation validation errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except Exception as e:
+        logger.error(f'Error calculating price: {e}', exc_info=True)
+        return Response(
+            {'error': 'Internal server error'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @extend_schema(
@@ -109,6 +138,13 @@ def price_list(request):
     """
     Get active price list.
     """
-    prices = PriceList.objects.filter(is_active=True)
-    serializer = PriceListSerializer(prices, many=True)
-    return Response(serializer.data)
+    try:
+        prices = PriceList.objects.filter(is_active=True)
+        serializer = PriceListSerializer(prices, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f'Error getting price list: {e}', exc_info=True)
+        return Response(
+            {'error': 'Internal server error'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
