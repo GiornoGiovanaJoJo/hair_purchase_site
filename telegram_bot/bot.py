@@ -40,6 +40,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from hair_app.models import HairApplication
 
@@ -101,7 +102,12 @@ async def cmd_start(message: types.Message):
 @dp.message(Command("new"))
 async def cmd_new_applications(message: types.Message):
     """Показать новые заявки"""
-    new_apps = HairApplication.objects.filter(status='new').order_by('-created_at')[:5]
+    # Используем sync_to_async для Django ORM
+    @sync_to_async
+    def get_new_apps():
+        return list(HairApplication.objects.filter(status='new').order_by('-created_at')[:5])
+    
+    new_apps = await get_new_apps()
     
     if not new_apps:
         await message.answer("📋 <b>Новых заявок нет</b>")
@@ -118,7 +124,11 @@ async def cmd_new_applications(message: types.Message):
 @dp.message(Command("all"))
 async def cmd_all_applications(message: types.Message):
     """Показать все заявки"""
-    all_apps = HairApplication.objects.all().order_by('-created_at')[:10]
+    @sync_to_async
+    def get_all_apps():
+        return list(HairApplication.objects.all().order_by('-created_at')[:10])
+    
+    all_apps = await get_all_apps()
     
     if not all_apps:
         await message.answer("📋 <b>Заявок нет</b>")
@@ -135,19 +145,25 @@ async def cmd_all_applications(message: types.Message):
 @dp.message(Command("stats"))
 async def cmd_stats(message: types.Message):
     """Показать статистику"""
-    total = HairApplication.objects.count()
-    new = HairApplication.objects.filter(status='new').count()
-    in_progress = HairApplication.objects.filter(status='in_progress').count()
-    completed = HairApplication.objects.filter(status='completed').count()
-    rejected = HairApplication.objects.filter(status='rejected').count()
+    @sync_to_async
+    def get_stats():
+        return {
+            'total': HairApplication.objects.count(),
+            'new': HairApplication.objects.filter(status='new').count(),
+            'in_progress': HairApplication.objects.filter(status='in_progress').count(),
+            'completed': HairApplication.objects.filter(status='completed').count(),
+            'rejected': HairApplication.objects.filter(status='rejected').count(),
+        }
+    
+    stats = await get_stats()
     
     text = (
         "📊 <b>Статистика заявок:</b>\n\n"
-        f"📝 Всего: <b>{total}</b>\n"
-        f"🆕 Новых: <b>{new}</b>\n"
-        f"⏳ В работе: <b>{in_progress}</b>\n"
-        f"✅ Завершено: <b>{completed}</b>\n"
-        f"❌ Отклонено: <b>{rejected}</b>"
+        f"📝 Всего: <b>{stats['total']}</b>\n"
+        f"🆕 Новых: <b>{stats['new']}</b>\n"
+        f"⏳ В работе: <b>{stats['in_progress']}</b>\n"
+        f"✅ Завершено: <b>{stats['completed']}</b>\n"
+        f"❌ Отклонено: <b>{stats['rejected']}</b>"
     )
     
     await message.answer(text)
@@ -161,9 +177,21 @@ async def process_application_callback(callback: types.CallbackQuery):
     """Обработка кнопок управления заявкой"""
     action, app_id = callback.data.split("_", 1)
     
-    try:
-        app = HairApplication.objects.get(id=app_id)
-    except HairApplication.DoesNotExist:
+    @sync_to_async
+    def get_app(app_id):
+        try:
+            return HairApplication.objects.get(id=app_id)
+        except HairApplication.DoesNotExist:
+            return None
+    
+    @sync_to_async
+    def update_app_status(app, status):
+        app.status = status
+        app.save()
+    
+    app = await get_app(app_id)
+    
+    if not app:
         await callback.answer("❌ Заявка не найдена", show_alert=True)
         return
     
@@ -176,28 +204,25 @@ async def process_application_callback(callback: types.CallbackQuery):
         await callback.answer()
     
     elif action == "accept":
-        app.status = 'in_progress'
-        app.save()
+        await update_app_status(app, 'in_progress')
         await callback.answer("✅ Заявка принята в работу")
         
         # Обновляем кнопки
-        keyboard = get_application_keyboard(app.id, app.status)
+        keyboard = get_application_keyboard(app.id, 'in_progress')
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     
     elif action == "complete":
-        app.status = 'completed'
-        app.save()
+        await update_app_status(app, 'completed')
         await callback.answer("✅ Заявка завершена")
         
-        keyboard = get_application_keyboard(app.id, app.status)
+        keyboard = get_application_keyboard(app.id, 'completed')
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     
     elif action == "reject":
-        app.status = 'rejected'
-        app.save()
+        await update_app_status(app, 'rejected')
         await callback.answer("❌ Заявка отклонена")
         
-        keyboard = get_application_keyboard(app.id, app.status)
+        keyboard = get_application_keyboard(app.id, 'rejected')
         await callback.message.edit_reply_markup(reply_markup=keyboard)
 
 # ====================
@@ -277,8 +302,19 @@ async def send_new_application_notification(app_id: int):
     Отправить уведомление о новой заявке.
     Эту функцию нужно вызвать из Django view после создания заявки.
     """
+    @sync_to_async
+    def get_app(app_id):
+        try:
+            return HairApplication.objects.get(id=app_id)
+        except HairApplication.DoesNotExist:
+            return None
+    
     try:
-        app = HairApplication.objects.get(id=app_id)
+        app = await get_app(app_id)
+        
+        if not app:
+            logger.error(f"Заявка #{app_id} не найдена")
+            return
         
         text = (
             "🆕 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
@@ -321,8 +357,6 @@ async def send_new_application_notification(app_id: int):
         
         logger.info(f"Уведомление о заявке #{app_id} отправлено")
         
-    except HairApplication.DoesNotExist:
-        logger.error(f"Заявка #{app_id} не найдена")
     except Exception as e:
         logger.error(f"Ошибка при отправке уведомления: {e}")
 
