@@ -1,11 +1,32 @@
 # Hair Purchase Site
 
+## Новый современный дизайн (2025-11)
+
+Добавлен красивый аниме-стиль лендинг с плавной анимацией, навигацией по разделам и адаптивным интерфейсом.
+
+**Визуальные секции:**
+- Главная страница с крупным баннером и преимуществами
+- Калькулятор стоимости
+- Форма заявки на продажу волос
+- Боковое меню для удобной навигации
+- Адаптивные точки переключения разделов
+
+**Старт:**
+
+- Главная страница: `templates/index.html`
+- Стили: `static/css/style.css`
+- JS: `static/js/main.js`
+- При отсутствии `hero.jpg` используется SVG-заглушка
+
+Сайт совместим с Django 5.2+.
+
+---
+
 ## Описание проекта
 
 Одностраничный сайт для приема заявок на продажу натуральных волос с калькулятором стоимости и формой обратной связи.
 
 ### Основные возможности:
-
 - Калькулятор стоимости волос (длина, цвет, структура)
 - Форма заявки с загрузкой фото
 - Интеграция с Яндекс.Метрикой
@@ -13,7 +34,6 @@
 - Админ-панель Django
 
 ## Технологии
-
 - Python 3.12
 - Django 5.2.8 (LTS)
 - Django REST Framework 3.16.1
@@ -80,129 +100,32 @@ python manage.py runserver
 
 Сайт будет доступен по адресу: http://127.0.0.1:8000/
 
-Админ-панель: http://127.0.0.1:8000/admin/
+---
 
-API документация: http://127.0.0.1:8000/api/docs/
-
-## Telegram бот
-
-### Настройка бота
-
-1. Создайте бота через @BotFather в Telegram
-2. Получите токен бота
-3. Добавьте токен в `.env` файл:
-   ```
-   TELEGRAM_BOT_TOKEN=your_bot_token_here
-   TELEGRAM_MAIN_ADMIN_ID=your_telegram_id
-   ```
-4. Узнайте свой Telegram ID у @userinfobot
-
-### Запуск бота
-
-```bash
-python manage.py run_telegram_bot
-```
-
-### Добавление администраторов
-
-1. Откройте админ-панель Django
-2. Перейдите в раздел "Telegram администраторы"
-3. Добавьте нового администратора, указав его Telegram ID
-
-## Структура проекта
+## Файловая структура (ключевое)
 
 ```
 hair_purchase_site/
-├── config/                 # Настройки проекта
-│   ├── settings.py
-│   ├── urls.py
-│   └── telegram_settings.py
-├── hair_app/              # Основное приложение
-│   ├── models.py          # Модели данных
-│   ├── views.py           # Представления
-│   ├── serializers.py     # Сериализаторы DRF
-│   ├── admin.py           # Настройки админки
-│   └── management/        # Django команды
-├── telegram_bot/          # Telegram бот
-│   ├── bot.py            # Главный файл бота
-│   ├── handlers/         # Обработчики команд
-│   ├── keyboards/        # Клавиатуры
-│   └── filters/          # Фильтры
-├── templates/            # HTML шаблоны
-├── static/              # Статические файлы
-├── media/               # Загружаемые файлы
-├── requirements.txt     # Зависимости
-└── manage.py           # Django management
+├── templates/
+│   └── index.html
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── main.js
+│   └── images/
+│       └── hero.jpg (вы можете заменить на своё)
 ```
 
-## API Endpoints
+---
 
-- `GET /api/applications/` - Список всех заявок
-- `POST /api/applications/` - Создать заявку
-- `GET /api/applications/{id}/` - Детали заявки
-- `POST /api/calculator/` - Рассчитать стоимость
-- `GET /api/price-list/` - Прайс-лист
+## Как заменить изображение в баннере?
+Положите своё изображение `hero.jpg` в `static/images/` — оно сразу появится на сайте.
 
-## Переменные окружения
+Если файла нет, появится SVG-заглушка.
 
-Основные переменные в `.env` файле:
+---
 
-```bash
-# Django
-SECRET_KEY=your-secret-key
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+API и админ-панель действуют по-прежнему. Telegram-бот и backend не затрагивались.
 
-# Яндекс.Метрика
-YANDEX_METRIKA_ID=your_metrika_id
-
-# Email
-EMAIL_HOST_USER=your_email@example.com
-EMAIL_HOST_PASSWORD=your_password
-ADMIN_EMAIL=admin@example.com
-
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_MAIN_ADMIN_ID=your_telegram_id
-```
-
-## Production Deploy
-
-### С использованием Gunicorn
-
-```bash
-gunicorn config.wsgi:application --bind 0.0.0.0:8000
-```
-
-### С использованием systemd (Linux)
-
-Создайте файл `/etc/systemd/system/hair_purchase.service`:
-
-```ini
-[Unit]
-Description=Hair Purchase Site
-After=network.target
-
-[Service]
-User=www-data
-Group=www-data
-WorkingDirectory=/path/to/hair_purchase_site
-Environment="PATH=/path/to/venv/bin"
-ExecStart=/path/to/venv/bin/gunicorn config.wsgi:application --bind 0.0.0.0:8000
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl start hair_purchase
-sudo systemctl enable hair_purchase
-```
-
-## Лицензия
-
-MIT License
-
-## Контакты
-
-Для вопросов и предложений: [ваш email]
+Все вопросы — в Issues или Telegram.
