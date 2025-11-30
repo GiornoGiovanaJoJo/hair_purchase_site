@@ -150,7 +150,8 @@ async def cmd_stats(message: types.Message):
         return {
             'total': HairApplication.objects.count(),
             'new': HairApplication.objects.filter(status='new').count(),
-            'in_progress': HairApplication.objects.filter(status='in_progress').count(),
+            'viewed': HairApplication.objects.filter(status='viewed').count(),
+            'accepted': HairApplication.objects.filter(status='accepted').count(),
             'completed': HairApplication.objects.filter(status='completed').count(),
             'rejected': HairApplication.objects.filter(status='rejected').count(),
         }
@@ -161,8 +162,9 @@ async def cmd_stats(message: types.Message):
         "📊 <b>Статистика заявок:</b>\n\n"
         f"📝 Всего: <b>{stats['total']}</b>\n"
         f"🆕 Новых: <b>{stats['new']}</b>\n"
-        f"⏳ В работе: <b>{stats['in_progress']}</b>\n"
-        f"✅ Завершено: <b>{stats['completed']}</b>\n"
+        f"👀 Просмотрено: <b>{stats['viewed']}</b>\n"
+        f"✅ Принято: <b>{stats['accepted']}</b>\n"
+        f"🎉 Завершено: <b>{stats['completed']}</b>\n"
         f"❌ Отклонено: <b>{stats['rejected']}</b>"
     )
     
@@ -204,11 +206,11 @@ async def process_application_callback(callback: types.CallbackQuery):
         await callback.answer()
     
     elif action == "accept":
-        await update_app_status(app, 'in_progress')
+        await update_app_status(app, 'accepted')
         await callback.answer("✅ Заявка принята в работу")
         
         # Обновляем кнопки
-        keyboard = get_application_keyboard(app.id, 'in_progress')
+        keyboard = get_application_keyboard(app.id, 'accepted')
         await callback.message.edit_reply_markup(reply_markup=keyboard)
     
     elif action == "complete":
@@ -233,8 +235,9 @@ def format_application_short(app: HairApplication) -> str:
     """Краткое описание заявки"""
     status_emoji = {
         'new': '🆕',
-        'in_progress': '⏳',
-        'completed': '✅',
+        'viewed': '👀',
+        'accepted': '✅',
+        'completed': '🎉',
         'rejected': '❌'
     }
     
@@ -243,7 +246,7 @@ def format_application_short(app: HairApplication) -> str:
     
     text = (
         f"{emoji} <b>Заявка #{app.id}</b>\n"
-        f"👤 {app.full_name}\n"
+        f"👤 {app.name}\n"
         f"📞 {app.phone}\n"
         f"📅 {app.created_at.strftime('%d.%m.%Y %H:%M')}\n"
         f"🎯 Статус: <b>{status_text}</b>"
@@ -257,7 +260,7 @@ def format_application_full(app: HairApplication) -> str:
     
     text = (
         f"📝 <b>Заявка #{app.id}</b>\n\n"
-        f"👤 <b>Имя:</b> {app.full_name}\n"
+        f"👤 <b>Имя:</b> {app.name}\n"
         f"📞 <b>Телефон:</b> {app.phone}\n"
     )
     
@@ -267,14 +270,20 @@ def format_application_full(app: HairApplication) -> str:
     if app.city:
         text += f"🏙 <b>Город:</b> {app.city}\n"
     
-    if app.hair_length:
-        text += f"\n📏 <b>Длина волос:</b> {app.hair_length} см\n"
+    text += f"\n📏 <b>Длина:</b> {app.get_length_display()}\n"
+    text += f"🎨 <b>Цвет:</b> {app.get_color_display()}\n"
+    text += f"🧬 <b>Структура:</b> {app.get_structure_display()}\n"
+    text += f"👶 <b>Возраст:</b> {app.get_age_display()}\n"
+    text += f"💆 <b>Состояние:</b> {app.get_condition_display()}\n"
     
-    if app.hair_description:
-        text += f"📝 <b>Описание:</b> {app.hair_description}\n"
+    if app.comment:
+        text += f"\n💬 <b>Комментарий:</b> {app.comment}\n"
+    
+    if app.estimated_price:
+        text += f"\n💰 <b>Предв. цена:</b> {app.estimated_price} ₽\n"
     
     text += (
-        f"\n📅 <b>Дата создания:</b> {app.created_at.strftime('%d.%m.%Y %H:%M')}\n"
+        f"\n📅 <b>Создано:</b> {app.created_at.strftime('%d.%m.%Y %H:%M')}\n"
         f"🎯 <b>Статус:</b> {status_text}"
     )
     
@@ -289,9 +298,9 @@ def get_application_keyboard(app_id: int, status: str) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="✅ Принять", callback_data=f"accept_{app_id}"),
             InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{app_id}")
         ])
-    elif status == 'in_progress':
+    elif status == 'accepted':
         buttons.append([
-            InlineKeyboardButton(text="✅ Завершить", callback_data=f"complete_{app_id}"),
+            InlineKeyboardButton(text="🎉 Завершить", callback_data=f"complete_{app_id}"),
             InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{app_id}")
         ])
     
@@ -344,7 +353,7 @@ async def send_new_application_notification(app_id: int):
                             types.InputMediaPhoto(
                                 media=types.FSInputFile(file_path),
                                 caption=f"🖼 Фото {field_name[-1]}" if len(media_group) == 0 else None
-                            )
+            )
                         )
                 except Exception as e:
                     logger.error(f"Ошибка при загрузке фото {field_name}: {e}")
