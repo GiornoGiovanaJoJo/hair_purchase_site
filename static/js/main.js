@@ -47,6 +47,70 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
+// ===== КАЛЬКУЛЯТОР СТОИМОСТИ =====
+const calculatorForm = document.getElementById('calculatorForm');
+const priceResult = document.getElementById('priceResult');
+const estimatedPriceElement = document.getElementById('estimatedPrice');
+
+if (calculatorForm) {
+    calculatorForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            length: formData.get('length'),
+            color: formData.get('color'),
+            structure: formData.get('structure'),
+            condition: formData.get('condition')
+        };
+
+        // Показываем лоадер
+        const submitButton = this.querySelector('button[type="submit"]');
+        const btnText = submitButton.querySelector('.btn-text');
+        const btnLoader = submitButton.querySelector('.btn-loader');
+        
+        btnText.classList.add('hidden');
+        btnLoader.classList.remove('hidden');
+        submitButton.disabled = true;
+
+        try {
+            // Отправляем запрос на API
+            const response = await fetch('/api/calculator/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                // Анимация отображения результата
+                estimatedPriceElement.textContent = `${result.estimated_price.toLocaleString('ru-RU')} ₽`;
+                priceResult.classList.remove('hidden');
+                
+                // Плавная прокрутка к результату
+                setTimeout(() => {
+                    priceResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            } else {
+                const error = await response.json();
+                console.error('API Error:', error);
+                alert('Ошибка при расчете стоимости. Попробуйте снова.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка. Проверьте подключение к интернету.');
+        } finally {
+            // Восстанавливаем кнопку
+            btnText.classList.remove('hidden');
+            btnLoader.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    });
+}
+
 // ===== ПЛАВНОЕ ПОЯВЛЕНИЕ ЭЛЕМЕНТОВ ===== 
 const observerOptions = {
     threshold: 0.1,
@@ -112,7 +176,4 @@ document.addEventListener('keydown', function(e) {
 // ===== CONSOLE LOG =====
 console.log('%c🧑‍🦰 Сайт скупки волос загружен!', 'color: #e74c3c; font-size: 20px; font-weight: bold;');
 console.log('%cРазработано с ❤️ для вас', 'color: #95a5a6; font-size: 12px;');
-
-// ===== API ИНТЕГРАЦИЯ (для будущего расширения) =====
-// Калькулятор и форма будут добавлены позже
-// API эндпоинты: /api/calculator/ и /api/applications/
+console.log('%c🔧 API: /api/calculator/ и /api/applications/', 'color: #3498db; font-size: 14px;');
