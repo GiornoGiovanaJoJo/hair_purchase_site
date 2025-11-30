@@ -14,6 +14,16 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
+# ЗАГРУЗКА .env ФАЙЛА
+try:
+    from dotenv import load_dotenv
+    env_path = BASE_DIR / '.env'
+    load_dotenv(dotenv_path=env_path)
+    print(f"✅ .env загружен из: {env_path}")
+except ImportError:
+    print("⚠️ python-dotenv не установлен. Установите: pip install python-dotenv")
+    print("Пытаюсь продолжить без .env...")
+
 # Настраиваем Django окружение
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
@@ -39,12 +49,19 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 ADMIN_CHAT_ID = os.getenv('TELEGRAM_ADMIN_CHAT_ID')
 
 if not TOKEN:
-    logger.error("Ошибка: TELEGRAM_BOT_TOKEN не найден в .env")
+    logger.error("❌ TELEGRAM_BOT_TOKEN не найден!")
+    logger.error("Проверь файл .env и убедись, что переменная установлена:")
+    logger.error("TELEGRAM_BOT_TOKEN=твой_токен_от_BotFather")
     sys.exit(1)
 
 if not ADMIN_CHAT_ID:
-    logger.error("Ошибка: TELEGRAM_ADMIN_CHAT_ID не найден в .env")
+    logger.error("❌ TELEGRAM_ADMIN_CHAT_ID не найден!")
+    logger.error("Проверь файл .env и убедись, что переменная установлена:")
+    logger.error("TELEGRAM_ADMIN_CHAT_ID=твой_chat_id")
     sys.exit(1)
+
+logger.info(f"✅ Токен бота: {TOKEN[:20]}...")
+logger.info(f"✅ Admin Chat ID: {ADMIN_CHAT_ID}")
 
 bot = Bot(token=TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
