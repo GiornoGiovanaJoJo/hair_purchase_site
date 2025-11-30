@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скупка натуральных волос | Дорого</title>
+    <meta name="description" content="Продайте свои волосы дорого. Быстрая оценка и выкуп натуральных волос.">
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    {% if YANDEX_METRIKA_ID %}
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+       (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+       m[i].l=1*new Date();
+       for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+       k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+       (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+    
+       ym({{ YANDEX_METRIKA_ID }}, "init", {
+            clickmap:true,
+            trackLinks:true,
+            accurateTrackBounce:true,
+            webvisor:true
+       });
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/{{ YANDEX_METRIKA_ID }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    {% endif %}
+</head>
+<body>
+    <!-- Боковая панель навигации -->
+    <nav class="sidebar">
+        <div class="nav-group">
+            <button class="nav-btn active" data-section="home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </button>
+            <button class="nav-btn" data-section="calculator">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="8" y1="10" x2="16" y2="10"></line>
+                    <line x1="8" y1="14" x2="12" y2="14"></line>
+                </svg>
+            </button>
+            <button class="nav-btn" data-section="application">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="nav-group nav-bottom">
+            <button class="nav-btn-round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m5.66-13.66l-4.24 4.24m0 6.36l4.24 4.24M23 12h-6m-6 0H1m16.24-5.66l-4.24 4.24m0 6.36l4.24 4.24"></path>
+                </svg>
+            </button>
+            <button class="nav-btn-round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+            </button>
+            <div class="lang-switch">
+                <div class="lang active">RU</div>
+                <div class="lang">EN</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главный контент -->
+    <main class="main-content">
+        <!-- Секция: Главная -->
+        <section id="home" class="section active">
+            <div class="hero">
+                <div class="hero-image">
+                    <img src="/static/images/hero.jpg" alt="Скупка волос" id="heroImage">
+                    <div class="hero-overlay"></div>
+                </div>
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span class="badge-text">НОВОЕ ПРЕДЛОЖЕНИЕ</span>
+                        <span class="badge-number">+15%</span>
+                    </div>
+                    <h1 class="hero-title">Скупка натуральных волос</h1>
+                    <p class="hero-subtitle">Продайте свои волосы дорого и быстро</p>
+                    <button class="btn-primary" onclick="scrollToSection('calculator')">
+                        Рассчитать стоимость
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14m-7-7l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Высокие цены</h3>
+                    <p>Лучшие цены на рынке за натуральные волосы</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Быстрая оценка</h3>
+                    <p>Получите оценку стоимости за несколько минут</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Надежность</h3>
+                    <p>Работаем прозрачно и честно с каждым клиентом</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция: Калькулятор (продолжение в следующем коммите из-за ограничения размера) -->
+        <section id="calculator" class="section">
+            <div class="section-header">
+                <h2>💎 Калькулятор стоимости</h2>
+                <p>Узнайте предварительную стоимость ваших волос</p>
+            </div>
+            <div class="calculator-container">
+                <p style="text-align: center; color: #b0b0b0;">Калькулятор и форма заявки в разработке. API доступен по адресу <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
+            </div>
+        </section>
+
+        <!-- Секция: Заявка -->
+        <section id="application" class="section">
+            <div class="section-header">
+                <h2>📝 Оставить заявку</h2>
+                <p>Заполните форму через API: <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Кнопки навигации по секциям -->
+    <div class="section-dots">
+        <button class="dot active" data-section="home" title="Главная"></button>
+        <button class="dot" data-section="calculator" title="Калькулятор"></button>
+        <button class="dot" data-section="application" title="Заявка"></button>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
