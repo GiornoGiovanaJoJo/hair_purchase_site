@@ -117,14 +117,84 @@
             </div>
         </section>
 
-        <!-- Секция: Калькулятор (продолжение в следующем коммите из-за ограничения размера) -->
+        <!-- Секция: Калькулятор -->
         <section id="calculator" class="section">
             <div class="section-header">
                 <h2>💎 Калькулятор стоимости</h2>
                 <p>Узнайте предварительную стоимость ваших волос</p>
             </div>
+
             <div class="calculator-container">
-                <p style="text-align: center; color: #b0b0b0;">Калькулятор и форма заявки в разработке. API доступен по адресу <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
+                <form id="calculatorForm" class="calculator-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Длина волос *</label>
+                            <select name="length" required>
+                                <option value="">Выберите длину</option>
+                                <option value="40-50">40-50 см</option>
+                                <option value="50-60">50-60 см</option>
+                                <option value="60-70">60-70 см</option>
+                                <option value="70-80">70-80 см</option>
+                                <option value="80-90">80-90 см</option>
+                                <option value="90-100">90-100 см</option>
+                                <option value="100+">Более 100 см</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Цвет волос *</label>
+                            <select name="color" required>
+                                <option value="">Выберите цвет</option>
+                                <option value="blonde">Блонд (светлые)</option>
+                                <option value="light">Светло-русые</option>
+                                <option value="medium">Русые</option>
+                                <option value="dark">Темно-русые</option>
+                                <option value="brown">Темные (каштановые)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Структура волос *</label>
+                            <select name="structure" required>
+                                <option value="">Выберите структуру</option>
+                                <option value="thin">Славянка (тонкие)</option>
+                                <option value="medium">Средние</option>
+                                <option value="thick">Густые</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Состояние *</label>
+                            <select name="condition" required>
+                                <option value="">Выберите состояние</option>
+                                <option value="natural">Натуральные (не окрашенные)</option>
+                                <option value="dyed">Окрашенные</option>
+                                <option value="perm">После химической завивки</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">
+                        <span class="btn-text">Рассчитать стоимость</span>
+                        <span class="btn-loader hidden">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spinner">
+                                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                            </svg>
+                            Расчёт...
+                        </span>
+                    </button>
+                </form>
+
+                <div id="priceResult" class="price-result hidden">
+                    <div class="price-badge">
+                        <span class="price-label">Предварительная стоимость:</span>
+                        <span class="price-value" id="estimatedPrice">0 ₽</span>
+                    </div>
+                    <p class="price-note">* Точная цена определяется после осмотра волос</p>
+                    <button class="btn-secondary" onclick="scrollToSection('application')">
+                        Оставить заявку
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -132,7 +202,10 @@
         <section id="application" class="section">
             <div class="section-header">
                 <h2>📝 Оставить заявку</h2>
-                <p>Заполните форму через API: <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
+                <p>Заполните форму, и мы свяжемся с вами в ближайшее время</p>
+            </div>
+            <div class="calculator-container">
+                <p style="text-align: center; color: #b0b0b0;">Форма заявки будет добавлена в следующем обновлении. Пока доступен API: <a href="/api/docs/" style="color: #e74c3c;">/api/docs/</a></p>
             </div>
         </section>
     </main>
