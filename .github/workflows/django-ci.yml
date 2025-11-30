@@ -86,15 +86,22 @@ jobs:
           # Collect static files
           python manage.py collectstatic --noinput
           
-          # Restart services (choose based on your setup)
+          # Restart services
           if [ -f "/etc/systemd/system/hair_purchase.service" ]; then
             sudo systemctl restart hair_purchase
             echo "✅ Systemd service restarted"
           elif pgrep -f "gunicorn.*hair_purchase" > /dev/null; then
-            pkill -HUP -f "gunicorn.*hair_purchase"
-            echo "✅ Gunicorn reloaded"
+            # Send HUP signal to reload Gunicorn gracefully
+            pkill -HUP -f "gunicorn.*hair_purchase" || true
+            sleep 2
+            if pgrep -f "gunicorn.*hair_purchase" > /dev/null; then
+              echo "✅ Gunicorn reloaded successfully"
+            else
+              echo "⚠️  Gunicorn process not found after reload"
+            fi
           else
-            echo "⚠️  No service found to restart - manual restart may be needed"
+            echo "🚧 No service configured - deployment files updated"
+            echo "💡 Consider setting up systemd service or running 'gunicorn config.wsgi:application'"
           fi
           
           echo "✅ Deployment completed successfully"
