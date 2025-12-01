@@ -54,7 +54,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - name: Deploy to production
+    - name: Deploy to Jino VPS via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.DEPLOYHOST }}
@@ -63,45 +63,46 @@ jobs:
         port: ${{ secrets.DEPLOYPORT }}
         script: |
           set -e
+
           echo "🚀 Starting deployment..."
-          
+
           # Navigate to project directory
           cd /opt/hair_purchase_site || { echo "❌ Project directory not found"; exit 1; }
-          
-          # Reset any local changes and pull latest code
+
+          echo "📥 Fetch & reset to origin/main"
           git fetch origin
           git reset --hard origin/main
           git pull origin main
-          
-          # Activate virtual environment
+
+          echo "🐍 Activate virtualenv"
           source venv/bin/activate || { echo "❌ Virtual environment not found"; exit 1; }
-          
-          # Update dependencies
+
+          echo "📦 Upgrade pip & install requirements"
           pip install --upgrade pip
           pip install -r requirements.txt
-          
-          # Run migrations
+
+          echo "🗄️ Apply migrations"
           python manage.py migrate --noinput
-          
-          # Collect static files
+
+          echo "🎨 Collect static"
           python manage.py collectstatic --noinput
-          
-          # Restart services
-          if [ -f "/etc/systemd/system/hair_purchase.service" ]; then
+
+          echo "🔁 Restart Django systemd service (hair_purchase)"
+          if systemctl list-unit-files | grep -q '^hair_purchase.service'; then
             sudo systemctl restart hair_purchase
-            echo "✅ Systemd service restarted"
-          elif pgrep -f "gunicorn.*hair_purchase" > /dev/null; then
-            # Send HUP signal to reload Gunicorn gracefully
-            pkill -HUP -f "gunicorn.*hair_purchase" || true
-            sleep 2
-            if pgrep -f "gunicorn.*hair_purchase" > /dev/null; then
-              echo "✅ Gunicorn reloaded successfully"
-            else
-              echo "⚠️  Gunicorn process not found after reload"
-            fi
+            sudo systemctl status hair_purchase --no-pager -l || true
+            echo "✅ Django service 'hair_purchase' restarted"
           else
-            echo "🚧 No service configured - deployment files updated"
-            echo "💡 Consider setting up systemd service or running 'gunicorn config.wsgi:application'"
+            echo "⚠️ Systemd service 'hair_purchase' not found. Skipping restart."
           fi
-          
+
+          echo "🤖 Restart Telegram bot systemd service (hair_purchase_bot)"
+          if systemctl list-unit-files | grep -q '^hair_purchase_bot.service'; then
+            sudo systemctl restart hair_purchase_bot
+            sudo systemctl status hair_purchase_bot --no-pager -l || true
+            echo "✅ Telegram bot service 'hair_purchase_bot' restarted"
+          else
+            echo "⚠️ Systemd service 'hair_purchase_bot' not found. Skipping bot restart."
+          fi
+
           echo "✅ Deployment completed successfully"
