@@ -68,6 +68,7 @@ if (calculatorForm) {
             length: formData.get('length'),
             color: formData.get('color'),
             structure: formData.get('structure'),
+            age: formData.get('age'),  // ДОБАВЛЕНО: поле age
             condition: formData.get('condition')
         };
 
@@ -93,13 +94,12 @@ if (calculatorForm) {
             if (response.ok) {
                 const result = await response.json();
                 
-                // Рассчитываем диапазон цен (±20% от основной цены)
-                const basePrice = result.estimated_price;
-                const minPrice = Math.round(basePrice * 0.8);
-                const maxPrice = Math.round(basePrice * 1.2);
+                // API теперь возвращает готовые min_price и max_price
+                const minPrice = result.min_price || Math.round(result.estimated_price * 0.8);
+                const maxPrice = result.max_price || Math.round(result.estimated_price * 1.2);
                 
-                document.getElementById('priceMin').textContent = `${minPrice.toLocaleString('ru-RU')} ₽`;
-                document.getElementById('priceMax').textContent = `${maxPrice.toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMin').textContent = `${Math.round(minPrice).toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMax').textContent = `${Math.round(maxPrice).toLocaleString('ru-RU')} ₽`;
                 
                 priceResult.classList.remove('hidden');
                 
@@ -155,63 +155,40 @@ function updateHairPreview() {
 if (lengthSelect) lengthSelect.addEventListener('change', updateHairPreview);
 if (colorSelect) colorSelect.addEventListener('change', updateHairPreview);
 
-// ===== ФОРМА ЗАЯВКИ =====
-const applicationForm = document.getElementById('applicationForm');
-const hairPhotos = document.getElementById('hairPhotos');
-const photoPreview = document.getElementById('photoPreview');
-const fileUploadArea = document.getElementById('fileUploadArea');
+// ===== ПРЕВЬЮ ФОТОГРАФИЙ ДЛЯ ЗАЯВКИ =====
 const successMessage = document.getElementById('successMessage');
 const formMessage = document.getElementById('formMessage');
+const applicationForm = document.getElementById('applicationForm');
 
-// Предпросмотр фотографий
-if (hairPhotos && photoPreview) {
-    hairPhotos.addEventListener('change', function(e) {
-        photoPreview.innerHTML = '';
-        const files = Array.from(e.target.files);
+// Обработчик превью для каждого input[type="file"]
+const photoInputs = document.querySelectorAll('input[type="file"][id^="photo"]');
+photoInputs.forEach((input) => {
+    input.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewContainer = document.querySelector(`[data-preview="${input.id}"]`);
         
-        if (files.length > 0) {
-            files.forEach((file, index) => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const img = document.createElement('div');
-                        img.className = 'preview-item';
-                        img.innerHTML = `
-                            <img src="${event.target.result}" alt="Превью ${index + 1}">
-                            <button type="button" class="remove-photo" data-index="${index}">×</button>
-                        `;
-                        photoPreview.appendChild(img);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+        if (file && previewContainer) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewContainer.innerHTML = `
+                        <img src="${event.target.result}" 
+                             alt="Превью ${input.id}" 
+                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                    `;
+                    previewContainer.classList.add('active');
+                };
+                reader.readAsDataURL(file);
+            }
+        } else if (!file && previewContainer) {
+            // Очистка превью при удалении файла
+            previewContainer.innerHTML = '';
+            previewContainer.classList.remove('active');
         }
     });
-    
-    // Drag & Drop
-    if (fileUploadArea) {
-        fileUploadArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '#e74c3c';
-        });
-        
-        fileUploadArea.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '';
-        });
-        
-        fileUploadArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.style.borderColor = '';
-            
-            const files = e.dataTransfer.files;
-            hairPhotos.files = files;
-            hairPhotos.dispatchEvent(new Event('change'));
-        });
-    }
-}
+});
 
-// Отправка формы заявки
+// ===== ОТПРАВКА ФОРМЫ ЗАЯВКИ =====
 if (applicationForm) {
     applicationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -284,7 +261,12 @@ window.resetApplicationForm = function() {
     if (applicationForm) {
         applicationForm.reset();
         applicationForm.classList.remove('hidden');
-        if (photoPreview) photoPreview.innerHTML = '';
+        
+        // Очистка всех превью
+        document.querySelectorAll('[data-preview]').forEach(preview => {
+            preview.innerHTML = '';
+            preview.classList.remove('active');
+        });
     }
     if (successMessage) {
         successMessage.classList.add('hidden');
