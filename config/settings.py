@@ -17,7 +17,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-in-production-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,4895c9d9450e.vps.myjino.ru', cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -133,6 +133,19 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL', default=True, cast=bool)
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://4895c9d9450e.vps.myjino.ru',
+    'https://4895c9d9450e.vps.myjino.ru',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to access CSRF token
+CSRF_COOKIE_SECURE = False  # Set to True only when using HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_NAME = 'csrftoken'
+
 # DRF Spectacular (OpenAPI/Swagger)
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Hair Purchase API',
@@ -161,7 +174,7 @@ from config.telegram_settings import *
 if not DEBUG:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE =False 
+    CSRF_COOKIE_SECURE = False
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
