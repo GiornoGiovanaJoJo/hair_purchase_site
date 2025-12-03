@@ -2,6 +2,7 @@
 Views for hair purchase application
 """
 import logging
+from decimal import Decimal
 from django.shortcuts import render
 from django.core.mail import send_mail
 from django.conf import settings
@@ -55,6 +56,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
                 length=serializer.validated_data['length'],
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
+                age=serializer.validated_data['age'],  # ДОБАВЛЕНО
                 condition=serializer.validated_data['condition']
             )
             
@@ -91,13 +93,17 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
 
 @extend_schema(
     request=PriceCalculatorSerializer,
-    responses={200: {'type': 'object', 'properties': {'estimated_price': {'type': 'number'}}}},
+    responses={200: {'type': 'object', 'properties': {
+        'estimated_price': {'type': 'number'},
+        'min_price': {'type': 'number'},
+        'max_price': {'type': 'number'}
+    }}},
     description='Рассчитать предварительную стоимость волос'
 )
 @api_view(['POST'])
 def calculate_price(request):
     """
-    Calculate hair price based on characteristics.
+    Calculate estimated price with range.
     """
     try:
         logger.info(f"Calculating price with data: {request.data}")
@@ -109,13 +115,20 @@ def calculate_price(request):
                 length=serializer.validated_data['length'],
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
+                age=serializer.validated_data['age'],  # ДОБАВЛЕНО
                 condition=serializer.validated_data['condition']
             )
             
-            logger.info(f"Calculated price: {estimated_price}")
+            # Рассчитываем диапазон ±20% - ДОБАВЛЕНО
+            min_price = (estimated_price * Decimal('0.8')).quantize(Decimal('0.01'))
+            max_price = (estimated_price * Decimal('1.2')).quantize(Decimal('0.01'))
+            
+            logger.info(f"Calculated price: {estimated_price}, range: {min_price}-{max_price}")
             
             return Response({
-                'estimated_price': float(estimated_price)
+                'estimated_price': float(estimated_price),
+                'min_price': float(min_price),  # ДОБАВЛЕНО
+                'max_price': float(max_price)   # ДОБАВЛЕНО
             })
         
         logger.warning(f"Price calculation validation errors: {serializer.errors}")

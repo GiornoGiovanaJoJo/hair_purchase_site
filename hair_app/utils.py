@@ -5,7 +5,7 @@ from decimal import Decimal
 from .models import PriceList
 
 
-def calculate_hair_price(length, color, structure, condition):
+def calculate_hair_price(length, color, structure, age, condition):
     """
     Calculate hair price based on characteristics.
     
@@ -13,6 +13,7 @@ def calculate_hair_price(length, color, structure, condition):
         length: Hair length category
         color: Hair color category
         structure: Hair structure category
+        age: Hair age category (child/adult)
         condition: Hair condition category
     
     Returns:
@@ -31,7 +32,7 @@ def calculate_hair_price(length, color, structure, condition):
         if price_entry:
             return price_entry.base_price
         
-        # If no exact match, calculate based on base multipliers
+        # Base price calculation with multipliers
         base_price = Decimal('5000.00')
         
         # Length multiplier
@@ -61,6 +62,12 @@ def calculate_hair_price(length, color, structure, condition):
             'thick': Decimal('0.9'),
         }
         
+        # Age multiplier - ДОБАВЛЕНО
+        age_multipliers = {
+            'child': Decimal('1.2'),  # Детские волосы дороже
+            'adult': Decimal('1.0'),
+        }
+        
         # Condition multiplier
         condition_multipliers = {
             'natural': Decimal('1.0'),
@@ -73,11 +80,10 @@ def calculate_hair_price(length, color, structure, condition):
         price *= length_multipliers.get(length, Decimal('1.0'))
         price *= color_multipliers.get(color, Decimal('1.0'))
         price *= structure_multipliers.get(structure, Decimal('1.0'))
+        price *= age_multipliers.get(age, Decimal('1.0'))  # ДОБАВЛЕНО
         price *= condition_multipliers.get(condition, Decimal('1.0'))
         
-        # Round to 2 decimal places
         return price.quantize(Decimal('0.01'))
         
     except Exception as e:
-        # Return default price if calculation fails
         return Decimal('5000.00')

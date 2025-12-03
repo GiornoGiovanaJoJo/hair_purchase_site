@@ -26,6 +26,7 @@ class PriceCalculatorSerializer(serializers.Serializer):
     length = serializers.ChoiceField(choices=HairApplication.LENGTH_CHOICES)
     color = serializers.ChoiceField(choices=HairApplication.COLOR_CHOICES)
     structure = serializers.ChoiceField(choices=HairApplication.STRUCTURE_CHOICES)
+    age = serializers.ChoiceField(choices=HairApplication.AGE_CHOICES)  # ДОБАВЛЕНО
     condition = serializers.ChoiceField(choices=HairApplication.CONDITION_CHOICES)
     
 
