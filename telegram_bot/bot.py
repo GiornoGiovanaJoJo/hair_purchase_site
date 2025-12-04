@@ -102,7 +102,6 @@ async def cmd_start(message: types.Message):
 @dp.message(Command("new"))
 async def cmd_new_applications(message: types.Message):
     """Показать новые заявки"""
-    # Используем sync_to_async для Django ORM
     @sync_to_async
     def get_new_apps():
         return list(HairApplication.objects.filter(status='new').order_by('-created_at')[:5])
@@ -117,9 +116,9 @@ async def cmd_new_applications(message: types.Message):
     
     for app in new_apps:
         text += format_application_short(app)
-        text += "\n" + "-" * 30 + "\n\n"
-    
-    await message.answer(text)
+        keyboard = get_application_keyboard(app.id, app.status)
+        await message.answer(text, reply_markup=keyboard)
+        text = ""  # Сбрасываем для следующей заявки
 
 @dp.message(Command("all"))
 async def cmd_all_applications(message: types.Message):
@@ -174,58 +173,86 @@ async def cmd_stats(message: types.Message):
 # CALLBACK ОБРАБОТЧИКИ
 # ====================
 
-@dp.callback_query(F.data.startswith("app_"))
+@dp.callback_query(F.data.regexp(r'^(view|accept|complete|reject)_\d+$'))
 async def process_application_callback(callback: types.CallbackQuery):
     """Обработка кнопок управления заявкой"""
-    action, app_id = callback.data.split("_", 1)
-    
-    @sync_to_async
-    def get_app(app_id):
-        try:
-            return HairApplication.objects.get(id=app_id)
-        except HairApplication.DoesNotExist:
-            return None
-    
-    @sync_to_async
-    def update_app_status(app, status):
-        app.status = status
-        app.save()
-    
-    app = await get_app(app_id)
-    
-    if not app:
-        await callback.answer("❌ Заявка не найдена", show_alert=True)
-        return
-    
-    if action == "app":
-        # Показать подробности заявки
-        text = format_application_full(app)
-        keyboard = get_application_keyboard(app.id, app.status)
+    try:
+        # Парсим callback_data: "action_app_id"
+        parts = callback.data.split('_')
+        if len(parts) != 2:
+            logger.error(f"Неверный формат callback_data: {callback.data}")
+            await callback.answer("❌ Ошибка формата данных", show_alert=True)
+            return
         
-        await callback.message.edit_text(text, reply_markup=keyboard)
-        await callback.answer()
-    
-    elif action == "accept":
-        await update_app_status(app, 'accepted')
-        await callback.answer("✅ Заявка принята в работу")
+        action, app_id_str = parts
+        app_id = int(app_id_str)
         
-        # Обновляем кнопки
-        keyboard = get_application_keyboard(app.id, 'accepted')
-        await callback.message.edit_reply_markup(reply_markup=keyboard)
-    
-    elif action == "complete":
-        await update_app_status(app, 'completed')
-        await callback.answer("✅ Заявка завершена")
+        logger.info(f"Обработка callback: action={action}, app_id={app_id}")
         
-        keyboard = get_application_keyboard(app.id, 'completed')
-        await callback.message.edit_reply_markup(reply_markup=keyboard)
-    
-    elif action == "reject":
-        await update_app_status(app, 'rejected')
-        await callback.answer("❌ Заявка отклонена")
+        @sync_to_async
+        def get_app(app_id):
+            try:
+                return HairApplication.objects.get(id=app_id)
+            except HairApplication.DoesNotExist:
+                return None
         
-        keyboard = get_application_keyboard(app.id, 'rejected')
-        await callback.message.edit_reply_markup(reply_markup=keyboard)
+        @sync_to_async
+        def update_app_status(app, status):
+            old_status = app.status
+            app.status = status
+            app.save()
+            logger.info(f"Заявка #{app.id}: статус изменен {old_status} -> {status}")
+            return old_status
+        
+        app = await get_app(app_id)
+        
+        if not app:
+            await callback.answer("❌ Заявка не найдена", show_alert=True)
+            return
+        
+        # Обрабатываем действия
+        if action == "view":
+            # Просмотр заявки (меняем статус на viewed если была new)
+            if app.status == 'new':
+                await update_app_status(app, 'viewed')
+            
+            text = format_application_full(app)
+            keyboard = get_application_keyboard(app.id, 'viewed')
+            
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer("👀 Заявка просмотрена")
+        
+        elif action == "accept":
+            old_status = await update_app_status(app, 'accepted')
+            
+            # Обновляем текст и кнопки
+            text = format_application_full(app)
+            keyboard = get_application_keyboard(app.id, 'accepted')
+            
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer("✅ Заявка принята в работу")
+        
+        elif action == "complete":
+            old_status = await update_app_status(app, 'completed')
+            
+            text = format_application_full(app)
+            keyboard = get_application_keyboard(app.id, 'completed')
+            
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer("🎉 Заявка завершена!")
+        
+        elif action == "reject":
+            old_status = await update_app_status(app, 'rejected')
+            
+            text = format_application_full(app)
+            keyboard = get_application_keyboard(app.id, 'rejected')
+            
+            await callback.message.edit_text(text, reply_markup=keyboard)
+            await callback.answer("❌ Заявка отклонена")
+    
+    except Exception as e:
+        logger.error(f"Ошибка в process_application_callback: {e}", exc_info=True)
+        await callback.answer("❌ Ошибка обработки", show_alert=True)
 
 # ====================
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -256,10 +283,19 @@ def format_application_short(app: HairApplication) -> str:
 
 def format_application_full(app: HairApplication) -> str:
     """Полное описание заявки"""
+    status_emoji = {
+        'new': '🆕',
+        'viewed': '👀',
+        'accepted': '✅',
+        'completed': '🎉',
+        'rejected': '❌'
+    }
+    
+    emoji = status_emoji.get(app.status, '📝')
     status_text = app.get_status_display()
     
     text = (
-        f"📝 <b>Заявка #{app.id}</b>\n\n"
+        f"{emoji} <b>Заявка #{app.id}</b>\n\n"
         f"👤 <b>Имя:</b> {app.name}\n"
         f"📞 <b>Телефон:</b> {app.phone}\n"
     )
@@ -290,26 +326,47 @@ def format_application_full(app: HairApplication) -> str:
     return text
 
 def get_application_keyboard(app_id: int, status: str) -> InlineKeyboardMarkup:
-    """Создать клавиатуру для заявки"""
+    """Создать клавиатуру для заявки в зависимости от статуса"""
     buttons = []
     
     if status == 'new':
+        # Новая заявка: можно просмотреть, принять или отклонить
+        buttons.append([
+            InlineKeyboardButton(text="👀 Просмотреть", callback_data=f"view_{app_id}")
+        ])
         buttons.append([
             InlineKeyboardButton(text="✅ Принять", callback_data=f"accept_{app_id}"),
             InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{app_id}")
         ])
+    
+    elif status == 'viewed':
+        # Просмотренная: можно принять или отклонить
+        buttons.append([
+            InlineKeyboardButton(text="✅ Принять", callback_data=f"accept_{app_id}"),
+            InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{app_id}")
+        ])
+    
     elif status == 'accepted':
+        # Принятая: можно завершить или отклонить
         buttons.append([
             InlineKeyboardButton(text="🎉 Завершить", callback_data=f"complete_{app_id}"),
             InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_{app_id}")
         ])
     
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    elif status == 'completed':
+        # Завершенная: кнопок нет
+        pass
+    
+    elif status == 'rejected':
+        # Отклоненная: кнопок нет
+        pass
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else InlineKeyboardMarkup(inline_keyboard=[])
 
 async def send_new_application_notification(app_id: int):
     """
     Отправить уведомление о новой заявке.
-    Эту функцию нужно вызвать из Django view после создания заявки.
+    Вызывается из Django view после создания заявки.
     """
     @sync_to_async
     def get_app(app_id):
@@ -326,7 +383,7 @@ async def send_new_application_notification(app_id: int):
             return
         
         text = (
-            "🆕 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
+            "🔔 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
             + format_application_full(app)
         )
         
@@ -353,7 +410,7 @@ async def send_new_application_notification(app_id: int):
                             types.InputMediaPhoto(
                                 media=types.FSInputFile(file_path),
                                 caption=f"🖼 Фото {field_name[-1]}" if len(media_group) == 0 else None
-            )
+                            )
                         )
                 except Exception as e:
                     logger.error(f"Ошибка при загрузке фото {field_name}: {e}")
@@ -364,10 +421,10 @@ async def send_new_application_notification(app_id: int):
                 media=media_group
             )
         
-        logger.info(f"Уведомление о заявке #{app_id} отправлено")
+        logger.info(f"✅ Уведомление о заявке #{app_id} отправлено успешно")
         
     except Exception as e:
-        logger.error(f"Ошибка при отправке уведомления: {e}")
+        logger.error(f"❌ Ошибка при отправке уведомления о заявке #{app_id}: {e}", exc_info=True)
 
 # ====================
 # ЗАПУСК БОТА
