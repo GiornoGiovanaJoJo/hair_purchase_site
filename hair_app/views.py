@@ -2,6 +2,7 @@
 Views for hair purchase application
 """
 import logging
+import asyncio
 from decimal import Decimal
 from django.shortcuts import render
 from django.core.mail import send_mail
@@ -56,7 +57,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
                 length=serializer.validated_data['length'],
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
-                age=serializer.validated_data['age'],  # ДОБАВЛЕНО
+                age=serializer.validated_data['age'],
                 condition=serializer.validated_data['condition']
             )
             
@@ -85,6 +86,17 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 # Log error but don't fail the request
                 logger.error(f'Error sending email for application #{application.id}: {e}')
+            
+            # Send Telegram notification
+            try:
+                from telegram_bot.bot import send_new_application_notification
+                asyncio.run(send_new_application_notification(application.id))
+                logger.info(f"Telegram notification sent for application #{application.id}")
+            except ImportError:
+                logger.warning("Telegram bot module not found. Skipping notification.")
+            except Exception as e:
+                # Log error but don't fail the request
+                logger.error(f'Error sending Telegram notification for application #{application.id}: {e}')
                 
         except Exception as e:
             logger.error(f'Error creating hair application: {e}', exc_info=True)
@@ -115,11 +127,11 @@ def calculate_price(request):
                 length=serializer.validated_data['length'],
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
-                age=serializer.validated_data['age'],  # ДОБАВЛЕНО
+                age=serializer.validated_data['age'],
                 condition=serializer.validated_data['condition']
             )
             
-            # Рассчитываем диапазон ±20% - ДОБАВЛЕНО
+            # Рассчитываем диапазон ±20%
             min_price = (estimated_price * Decimal('0.8')).quantize(Decimal('0.01'))
             max_price = (estimated_price * Decimal('1.2')).quantize(Decimal('0.01'))
             
@@ -127,8 +139,8 @@ def calculate_price(request):
             
             return Response({
                 'estimated_price': float(estimated_price),
-                'min_price': float(min_price),  # ДОБАВЛЕНО
-                'max_price': float(max_price)   # ДОБАВЛЕНО
+                'min_price': float(min_price),
+                'max_price': float(max_price)
             })
         
         logger.warning(f"Price calculation validation errors: {serializer.errors}")
