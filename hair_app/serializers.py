@@ -26,9 +26,23 @@ class PriceCalculatorSerializer(serializers.Serializer):
     length = serializers.ChoiceField(choices=HairApplication.LENGTH_CHOICES)
     color = serializers.ChoiceField(choices=HairApplication.COLOR_CHOICES)
     structure = serializers.ChoiceField(choices=HairApplication.STRUCTURE_CHOICES)
-    age = serializers.ChoiceField(choices=HairApplication.AGE_CHOICES)  # ДОБАВЛЕНО
+    age = serializers.ChoiceField(
+        choices=HairApplication.AGE_CHOICES,
+        required=False,
+        allow_blank=True,
+        help_text='Опционально. Если не указано, используется значение по умолчанию (взрослые)'
+    )
     condition = serializers.ChoiceField(choices=HairApplication.CONDITION_CHOICES)
     
+    def validate(self, data):
+        """
+        Если age не передан или пуст, используем default значение.
+        """
+        if not data.get('age') or data.get('age') == '':
+            # Default значение для age если не передан
+            data['age'] = 'взрослые'
+        return data
+
 
 class PriceListSerializer(serializers.ModelSerializer):
     """Serializer for price list."""
