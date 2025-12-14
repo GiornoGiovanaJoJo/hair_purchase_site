@@ -107,15 +107,13 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
     request=PriceCalculatorSerializer,
     responses={200: {'type': 'object', 'properties': {
         'estimated_price': {'type': 'number'},
-        'min_price': {'type': 'number'},
-        'max_price': {'type': 'number'}
     }}},
-    description='Рассчитать предварительную стоимость волос'
+    description='Рассчитать точную стоимость волос по таблице'
 )
 @api_view(['POST'])
 def calculate_price(request):
     """
-    Calculate estimated price with range.
+    Calculate exact price from table.
     """
     try:
         logger.info(f"Calculating price with data: {request.data}")
@@ -132,16 +130,10 @@ def calculate_price(request):
                     condition=serializer.validated_data['condition']
                 )
                 
-                # Рассчитываем диапазон ±20%
-                min_price = (estimated_price * Decimal('0.8')).quantize(Decimal('0.01'))
-                max_price = (estimated_price * Decimal('1.2')).quantize(Decimal('0.01'))
-                
-                logger.info(f"Calculated price: {estimated_price}, range: {min_price}-{max_price}")
+                logger.info(f"Calculated exact price: {estimated_price}")
                 
                 return Response({
                     'estimated_price': float(estimated_price),
-                    'min_price': float(min_price),
-                    'max_price': float(max_price)
                 })
             except Exception as e:
                 logger.error(f'Error in price calculation logic: {e}', exc_info=True)
