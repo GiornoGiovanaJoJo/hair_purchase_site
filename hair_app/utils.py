@@ -7,26 +7,27 @@ from .price_calculator import calculate_hair_price as calc_price
 
 def calculate_hair_price(length, color, structure, age, condition):
     """
-    Calculate hair price based on characteristics.
+    Calculate hair price based on characteristics using exact table.
     
-    This function wraps the price_calculator.calculate_hair_price function.
+    This function wraps the price_calculator.calculate_hair_price function
+    which uses a precise lookup table with 75 unique price combinations.
     
     Args:
-        length: Hair length in cm (40-150)
-        color: Hair color (e.g., 'blonde', 'light_brown', 'brown', 'dark_brown', 'chestnut', 'black')
-        structure: Hair structure (e.g., 'slavic', 'average', 'thick')
-        age: Hair age category (e.g., 'adult', 'child') - NOT USED in calculation
-        condition: Hair condition (e.g., 'natural', 'dyed', 'perm')
+        length: Hair length in cm (40-150) or range string like '50-60'
+        color: Hair color in Russian (e.g., 'блонд', 'русые')
+        structure: Hair structure in Russian ('славянка', 'среднее', 'густые')
+        age: Hair age category - NOT USED in new calculator (kept for compatibility)
+        condition: Hair condition - NOT USED in new calculator (kept for compatibility)
     
     Returns:
-        int: Calculated price in rubles
+        int: Exact price in rubles from lookup table
     
     Examples:
-        >>> calculate_hair_price(60, 'blonde', 'slavic', 'adult', 'natural')
+        >>> calculate_hair_price(60, 'блонд', 'славянка', 'adult', 'natural')
         35000
         
-        >>> calculate_hair_price(60, 'blonde', 'average', 'adult', 'natural')
-        31500
+        >>> calculate_hair_price(60, 'блонд', 'среднее', 'adult', 'natural')
+        30000
     """
     try:
         # Convert length to integer if needed
@@ -39,66 +40,19 @@ def calculate_hair_price(length, color, structure, age, condition):
         else:
             length = int(length)
         
-        # Normalize color names (support both English and Russian)
-        color_mapping = {
-            # English
-            'blonde': 'blonde',
-            'light_brown': 'light_brown',
-            'light brown': 'light_brown',
-            'brown': 'brown',
-            'dark_brown': 'dark_brown',
-            'dark brown': 'dark_brown',
-            'chestnut': 'chestnut',
-            'black': 'black',
-            # Russian
-            'блонд': 'blonde',
-            'светло-русые': 'light_brown',
-            'русые': 'brown',
-            'темно-русые': 'dark_brown',
-            'каштановые': 'chestnut',
-            'черные': 'black',
-        }
-        color = color_mapping.get(str(color).strip().lower(), 'blonde')
-        
-        # Normalize structure names
-        structure_mapping = {
-            # English
-            'slavic': 'slavic',
-            'average': 'average',
-            'thick': 'thick',
-            # Russian
-            'славянка': 'slavic',
-            'среднее': 'average',
-            'густые': 'thick',
-        }
-        structure = structure_mapping.get(str(structure).strip().lower(), 'average')
-        
-        # Normalize condition names
-        condition_mapping = {
-            # English
-            'natural': 'natural',
-            'dyed': 'dyed',
-            'perm': 'perm',
-            # Russian
-            'натуральные': 'natural',
-            'окрашенные': 'dyed',
-            'после химии': 'perm',
-        }
-        condition = condition_mapping.get(str(condition).strip().lower(), 'natural')
-        
-        # Calculate price using the new price calculator
+        # Call the exact price calculator
         price = calc_price(
             length=length,
             color=color,
             structure=structure,
             condition=condition,
-            age=age  # age is ignored in price_calculator
+            age=age
         )
         
         return int(price)
         
     except Exception as e:
-        # Return a default price if calculation fails
+        # Return a safe default if calculation fails
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f'Error calculating hair price: {e}', exc_info=True)
