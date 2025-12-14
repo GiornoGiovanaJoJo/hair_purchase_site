@@ -20,6 +20,7 @@ from .serializers import (
     PriceListSerializer
 )
 from .utils import calculate_hair_price
+from .price_calculator import PRICE_TABLE
 
 logger = logging.getLogger(__name__)
 
@@ -107,13 +108,15 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
     request=PriceCalculatorSerializer,
     responses={200: {'type': 'object', 'properties': {
         'estimated_price': {'type': 'number'},
+        'price_min': {'type': 'number'},
+        'price_max': {'type': 'number'},
     }}},
     description='Рассчитать точную стоимость волос по таблице'
 )
 @api_view(['POST'])
 def calculate_price(request):
     """
-    Calculate exact price from table.
+    Calculate exact price from table with min/max range by structure.
     """
     try:
         logger.info(f"Calculating price with data: {request.data}")
@@ -122,18 +125,62 @@ def calculate_price(request):
         
         if serializer.is_valid():
             try:
+                length = serializer.validated_data['length']
+                color = serializer.validated_data['color']
+                structure = serializer.validated_data['structure']
+                age = serializer.validated_data.get('age', 'взрослые')
+                condition = serializer.validated_data['condition']
+                
+                # Get exact price for selected structure
                 estimated_price = calculate_hair_price(
-                    length=serializer.validated_data['length'],
-                    color=serializer.validated_data['color'],
-                    structure=serializer.validated_data['structure'],
-                    age=serializer.validated_data.get('age', 'взрослые'),
-                    condition=serializer.validated_data['condition']
+                    length=length,
+                    color=color,
+                    structure=structure,
+                    age=age,
+                    condition=condition
                 )
                 
-                logger.info(f"Calculated exact price: {estimated_price}")
+                # Get price range for this length and color (across all structures)
+                length_int = int(length) if length else 50
+                if length_int < 50:
+                    length_range = '40-50'
+                elif length_int < 60:
+                    length_range = '50-60'
+                elif length_int < 80:
+                    length_range = '60-80'
+                elif length_int < 100:
+                    length_range = '80-100'
+                else:
+                    length_range = '100+'
+                
+                # Normalize color for table lookup
+                color_map = {
+                    'блонд': 'блонд',
+                    'светло-русые': 'светло-русые',
+                    'светлорусые': 'светло-русые',
+                    'русые': 'русые',
+                    'темно-русые': 'темно-русые',
+                    'темнорусые': 'темно-русые',
+                    'каштановые': 'каштановые',
+                    'каштан': 'каштановые',
+                }
+                normalized_color = color_map.get(str(color).strip().lower(), 'блонд')
+                
+                # Get min and max prices for this length and color
+                if length_range in PRICE_TABLE and normalized_color in PRICE_TABLE[length_range]:
+                    prices = list(PRICE_TABLE[length_range][normalized_color].values())
+                    price_min = min(prices)
+                    price_max = max(prices)
+                else:
+                    price_min = estimated_price
+                    price_max = estimated_price
+                
+                logger.info(f"Calculated prices - Min: {price_min}, Max: {price_max}, Exact: {estimated_price}")
                 
                 return Response({
                     'estimated_price': float(estimated_price),
+                    'price_min': float(price_min),
+                    'price_max': float(price_max),
                 })
             except Exception as e:
                 logger.error(f'Error in price calculation logic: {e}', exc_info=True)
