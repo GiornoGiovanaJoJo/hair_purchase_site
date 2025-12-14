@@ -57,7 +57,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
                 length=serializer.validated_data['length'],
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
-                age=serializer.validated_data['age'],
+                age=serializer.validated_data.get('age', 'взрослые'),
                 condition=serializer.validated_data['condition']
             )
             
@@ -123,33 +123,43 @@ def calculate_price(request):
         serializer = PriceCalculatorSerializer(data=request.data)
         
         if serializer.is_valid():
-            estimated_price = calculate_hair_price(
-                length=serializer.validated_data['length'],
-                color=serializer.validated_data['color'],
-                structure=serializer.validated_data['structure'],
-                age=serializer.validated_data['age'],
-                condition=serializer.validated_data['condition']
-            )
-            
-            # Рассчитываем диапазон ±20%
-            min_price = (estimated_price * Decimal('0.8')).quantize(Decimal('0.01'))
-            max_price = (estimated_price * Decimal('1.2')).quantize(Decimal('0.01'))
-            
-            logger.info(f"Calculated price: {estimated_price}, range: {min_price}-{max_price}")
-            
-            return Response({
-                'estimated_price': float(estimated_price),
-                'min_price': float(min_price),
-                'max_price': float(max_price)
-            })
+            try:
+                estimated_price = calculate_hair_price(
+                    length=serializer.validated_data['length'],
+                    color=serializer.validated_data['color'],
+                    structure=serializer.validated_data['structure'],
+                    age=serializer.validated_data.get('age', 'взрослые'),
+                    condition=serializer.validated_data['condition']
+                )
+                
+                # Рассчитываем диапазон ±20%
+                min_price = (estimated_price * Decimal('0.8')).quantize(Decimal('0.01'))
+                max_price = (estimated_price * Decimal('1.2')).quantize(Decimal('0.01'))
+                
+                logger.info(f"Calculated price: {estimated_price}, range: {min_price}-{max_price}")
+                
+                return Response({
+                    'estimated_price': float(estimated_price),
+                    'min_price': float(min_price),
+                    'max_price': float(max_price)
+                })
+            except Exception as e:
+                logger.error(f'Error in price calculation logic: {e}', exc_info=True)
+                return Response(
+                    {'error': f'Ошибка при расчете: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         
         logger.warning(f"Price calculation validation errors: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'errors': serializer.errors, 'message': 'Некорректные данные в запросе'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
         
     except Exception as e:
         logger.error(f'Error calculating price: {e}', exc_info=True)
         return Response(
-            {'error': 'Internal server error'},
+            {'error': f'Внутренняя ошибка сервера: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -170,6 +180,6 @@ def price_list(request):
     except Exception as e:
         logger.error(f'Error getting price list: {e}', exc_info=True)
         return Response(
-            {'error': 'Internal server error'},
+            {'error': 'Внутренняя ошибка сервера'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
