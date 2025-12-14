@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// ===== КАЛЬКУЛЯТОР СТОИМОСТИ =====
+// ===== КАЛЬКУЛЯТОР СТОИМОСТИ (ТОЧНАЯ ТАБЛИЦА) =====
 const calculatorForm = document.getElementById('calculatorForm');
 const priceResult = document.getElementById('priceResult');
 
@@ -68,7 +68,7 @@ if (calculatorForm) {
             length: formData.get('length'),
             color: formData.get('color'),
             structure: formData.get('structure'),
-            age: formData.get('age'),  // ДОБАВЛЕНО: поле age
+            age: formData.get('age'),
             condition: formData.get('condition')
         };
 
@@ -94,12 +94,11 @@ if (calculatorForm) {
             if (response.ok) {
                 const result = await response.json();
                 
-                // API теперь возвращает готовые min_price и max_price
-                const minPrice = result.min_price || Math.round(result.estimated_price * 0.8);
-                const maxPrice = result.max_price || Math.round(result.estimated_price * 1.2);
+                // Теперь возвращаем точную цену из таблицы
+                const price = result.estimated_price;
                 
-                document.getElementById('priceMin').textContent = `${Math.round(minPrice).toLocaleString('ru-RU')} ₽`;
-                document.getElementById('priceMax').textContent = `${Math.round(maxPrice).toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMin').textContent = `${Math.round(price).toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMax').textContent = `${Math.round(price).toLocaleString('ru-RU')} ₽`;
                 
                 priceResult.classList.remove('hidden');
                 
@@ -129,11 +128,11 @@ const hairPreview = document.getElementById('hairPreview');
 const previewImage = document.getElementById('previewImage');
 
 const hairColors = {
-    blonde: 'linear-gradient(135deg, #f5d76e 0%, #f7ca18 100%)',
-    light: 'linear-gradient(135deg, #e8d5b7 0%, #d4a574 100%)',
-    medium: 'linear-gradient(135deg, #d4a574 0%, #c19a6b 100%)',
-    dark: 'linear-gradient(135deg, #8b6f47 0%, #6b5344 100%)',
-    brown: 'linear-gradient(135deg, #6b4423 0%, #4a2c2a 100%)'
+    'блонд': 'linear-gradient(135deg, #f5d76e 0%, #f7ca18 100%)',
+    'светло-русые': 'linear-gradient(135deg, #e8d5b7 0%, #d4a574 100%)',
+    'русые': 'linear-gradient(135deg, #d4a574 0%, #c19a6b 100%)',
+    'темно-русые': 'linear-gradient(135deg, #8b6f47 0%, #6b5344 100%)',
+    'каштановые': 'linear-gradient(135deg, #6b4423 0%, #4a2c2a 100%)'
 };
 
 function updateHairPreview() {
@@ -143,7 +142,7 @@ function updateHairPreview() {
     if (length && color && hairPreview && previewImage) {
         hairPreview.classList.remove('hidden');
         
-        const gradient = hairColors[color] || hairColors.medium;
+        const gradient = hairColors[color] || hairColors['русые'];
         const lengthName = lengthSelect.options[lengthSelect.selectedIndex].text;
         const colorName = colorSelect.options[colorSelect.selectedIndex].text;
         
@@ -334,3 +333,4 @@ document.addEventListener('keydown', function(e) {
 console.log('%c🧑‍🦰 Сайт скупки волос загружен!', 'color: #e74c3c; font-size: 20px; font-weight: bold;');
 console.log('%cРазработано с ❤️ для вас', 'color: #95a5a6; font-size: 12px;');
 console.log('%c🔧 API: /api/calculator/ и /api/applications/', 'color: #3498db; font-size: 14px;');
+console.log('%c📊 Калькулятор использует точную таблицу цен (75 комбинаций)', 'color: #27ae60; font-size: 12px;');
