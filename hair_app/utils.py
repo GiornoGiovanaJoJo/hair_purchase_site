@@ -2,88 +2,104 @@
 Utility functions for hair purchase application
 """
 from decimal import Decimal
-from .models import PriceList
+from .price_calculator import calculate_hair_price as calc_price
 
 
 def calculate_hair_price(length, color, structure, age, condition):
     """
     Calculate hair price based on characteristics.
     
+    This function wraps the price_calculator.calculate_hair_price function.
+    
     Args:
-        length: Hair length category
-        color: Hair color category
-        structure: Hair structure category
-        age: Hair age category (child/adult)
-        condition: Hair condition category
+        length: Hair length in cm (40-150)
+        color: Hair color (e.g., 'blonde', 'light_brown', 'brown', 'dark_brown', 'chestnut', 'black')
+        structure: Hair structure (e.g., 'slavic', 'average', 'thick')
+        age: Hair age category (e.g., 'adult', 'child') - NOT USED in calculation
+        condition: Hair condition (e.g., 'natural', 'dyed', 'perm')
     
     Returns:
-        Decimal: Estimated price
+        int: Calculated price in rubles
+    
+    Examples:
+        >>> calculate_hair_price(60, 'blonde', 'slavic', 'adult', 'natural')
+        35000
+        
+        >>> calculate_hair_price(60, 'blonde', 'average', 'adult', 'natural')
+        31500
     """
     try:
-        # Try to find exact match in price list
-        price_entry = PriceList.objects.filter(
+        # Convert length to integer if needed
+        if isinstance(length, str):
+            # Parse length range if it's like "50-60"
+            if '-' in str(length):
+                length = int(str(length).split('-')[0])
+            else:
+                length = int(length)
+        else:
+            length = int(length)
+        
+        # Normalize color names (support both English and Russian)
+        color_mapping = {
+            # English
+            'blonde': 'blonde',
+            'light_brown': 'light_brown',
+            'light brown': 'light_brown',
+            'brown': 'brown',
+            'dark_brown': 'dark_brown',
+            'dark brown': 'dark_brown',
+            'chestnut': 'chestnut',
+            'black': 'black',
+            # Russian
+            'блонд': 'blonde',
+            'светло-русые': 'light_brown',
+            'русые': 'brown',
+            'темно-русые': 'dark_brown',
+            'каштановые': 'chestnut',
+            'черные': 'black',
+        }
+        color = color_mapping.get(str(color).strip().lower(), 'blonde')
+        
+        # Normalize structure names
+        structure_mapping = {
+            # English
+            'slavic': 'slavic',
+            'average': 'average',
+            'thick': 'thick',
+            # Russian
+            'славянка': 'slavic',
+            'среднее': 'average',
+            'густые': 'thick',
+        }
+        structure = structure_mapping.get(str(structure).strip().lower(), 'average')
+        
+        # Normalize condition names
+        condition_mapping = {
+            # English
+            'natural': 'natural',
+            'dyed': 'dyed',
+            'perm': 'perm',
+            # Russian
+            'натуральные': 'natural',
+            'окрашенные': 'dyed',
+            'после химии': 'perm',
+        }
+        condition = condition_mapping.get(str(condition).strip().lower(), 'natural')
+        
+        # Calculate price using the new price calculator
+        price = calc_price(
             length=length,
             color=color,
             structure=structure,
             condition=condition,
-            is_active=True
-        ).first()
+            age=age  # age is ignored in price_calculator
+        )
         
-        if price_entry:
-            return price_entry.base_price
-        
-        # Base price calculation with multipliers
-        base_price = Decimal('5000.00')
-        
-        # Length multiplier
-        length_multipliers = {
-            '40-50': Decimal('0.7'),
-            '50-60': Decimal('0.85'),
-            '60-70': Decimal('1.0'),
-            '70-80': Decimal('1.2'),
-            '80-90': Decimal('1.4'),
-            '90-100': Decimal('1.6'),
-            '100+': Decimal('1.8'),
-        }
-        
-        # Color multiplier
-        color_multipliers = {
-            'blonde': Decimal('1.3'),
-            'light': Decimal('1.2'),
-            'medium': Decimal('1.0'),
-            'dark': Decimal('0.9'),
-            'brown': Decimal('0.8'),
-        }
-        
-        # Structure multiplier
-        structure_multipliers = {
-            'thin': Decimal('1.2'),
-            'medium': Decimal('1.0'),
-            'thick': Decimal('0.9'),
-        }
-        
-        # Age multiplier - ДОБАВЛЕНО
-        age_multipliers = {
-            'child': Decimal('1.2'),  # Детские волосы дороже
-            'adult': Decimal('1.0'),
-        }
-        
-        # Condition multiplier
-        condition_multipliers = {
-            'natural': Decimal('1.0'),
-            'dyed': Decimal('0.7'),
-            'perm': Decimal('0.5'),
-        }
-        
-        # Calculate final price
-        price = base_price
-        price *= length_multipliers.get(length, Decimal('1.0'))
-        price *= color_multipliers.get(color, Decimal('1.0'))
-        price *= structure_multipliers.get(structure, Decimal('1.0'))
-        price *= age_multipliers.get(age, Decimal('1.0'))  # ДОБАВЛЕНО
-        price *= condition_multipliers.get(condition, Decimal('1.0'))
-        
-        return price.quantize(Decimal('0.01'))
+        return int(price)
         
     except Exception as e:
-        return Decimal('5000.00')
+        # Return a default price if calculation fails
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error calculating hair price: {e}', exc_info=True)
+        return 30000  # Safe default value
