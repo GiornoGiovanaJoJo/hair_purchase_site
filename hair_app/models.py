@@ -2,7 +2,7 @@
 Models for hair purchase application
 """
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.utils.translation import gettext_lazy as _
 from hair_app.price_calculator import calculate_hair_price
 
@@ -55,6 +55,13 @@ class HairApplication(models.Model):
         ('rejected', 'Отклонена'),
         ('completed', 'Завершена'),
     ]
+    
+    # Валидатор телефона
+    phone_validator = RegexValidator(
+        regex=r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$',
+        message='Введите телефон в формате +7 (999) 123-45-67',
+        code='invalid_phone_format'
+    )
     
     # Характеристики волос
     length = models.CharField(
@@ -116,7 +123,9 @@ class HairApplication(models.Model):
     
     phone = models.CharField(
         max_length=20,
-        verbose_name='Телефон'
+        verbose_name='Телефон',
+        validators=[phone_validator],
+        help_text='Формат: +7 (999) 123-45-67'
     )
     
     email = models.EmailField(
