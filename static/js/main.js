@@ -94,11 +94,12 @@ if (calculatorForm) {
             if (response.ok) {
                 const result = await response.json();
                 
-                // Теперь возвращаем точную цену из таблицы
-                const price = result.estimated_price;
+                // Возвращаем диапазон цен по структуре волос
+                const priceMin = result.price_min;
+                const priceMax = result.price_max;
                 
-                document.getElementById('priceMin').textContent = `${Math.round(price).toLocaleString('ru-RU')} ₽`;
-                document.getElementById('priceMax').textContent = `${Math.round(price).toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMin').textContent = `${Math.round(priceMin).toLocaleString('ru-RU')} ₽`;
+                document.getElementById('priceMax').textContent = `${Math.round(priceMax).toLocaleString('ru-RU')} ₽`;
                 
                 priceResult.classList.remove('hidden');
                 
