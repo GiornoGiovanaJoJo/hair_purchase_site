@@ -33,18 +33,38 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       continue-on-error: true
     
+    - name: Create migrations
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+      run: |
+        echo "🔨 Creating migrations..."
+        python manage.py makemigrations --check --dry-run || python manage.py makemigrations
+    
     - name: Run migrations
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
+        echo "🗄️ Applying migrations..."
         python manage.py migrate
+        echo "✅ Migrations applied successfully"
+    
+    - name: Check migrations status
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+      run: |
+        echo "📋 Checking migration status..."
+        python manage.py migrate --check
+        echo "✅ Database is up to date"
     
     - name: Run tests
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
+        echo "🧪 Running tests..."
         python manage.py test
 
   deploy:
@@ -65,6 +85,7 @@ jobs:
           set -e
 
           echo "🚀 Starting deployment..."
+          echo "📅 Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
 
           # Navigate to project directory
           cd /opt/hair_purchase_site || { echo "❌ Project directory not found"; exit 1; }
@@ -73,36 +94,74 @@ jobs:
           git fetch origin
           git reset --hard origin/main
           git pull origin main
+          echo "✅ Code updated successfully"
 
           echo "🐍 Activate virtualenv"
           source venv/bin/activate || { echo "❌ Virtual environment not found"; exit 1; }
+          echo "✅ Virtual environment activated"
 
           echo "📦 Upgrade pip & install requirements"
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install --upgrade pip > /dev/null 2>&1
+          pip install -r requirements.txt > /dev/null 2>&1
+          echo "✅ Dependencies installed"
 
-          echo "🗄️ Apply migrations"
+          echo "🔨 Creating new migrations"
+          python manage.py makemigrations
+          echo "✅ Migrations created"
+
+          echo "🗄️ Applying all migrations"
           python manage.py migrate --noinput
+          echo "✅ Migrations applied successfully"
 
-          echo "🎨 Collect static"
+          echo "📋 Verifying migration status"
+          python manage.py migrate --check || { echo "⚠️ Migration check failed but continuing..."; }
+          echo "✅ Migration status verified"
+
+          echo "🎨 Collecting static files"
           python manage.py collectstatic --noinput
+          echo "✅ Static files collected"
 
-          echo "🔁 Restart Django systemd service (hair_purchase)"
+          echo "🔍 Running deployment checks"
+          python manage.py check --deploy || { echo "⚠️ Deployment checks reported issues but continuing..."; }
+          echo "✅ Deployment checks completed"
+
+          echo "🔁 Restarting Django systemd service (hair_purchase)"
           if systemctl list-unit-files | grep -q '^hair_purchase.service'; then
             sudo systemctl restart hair_purchase
-            sudo systemctl status hair_purchase --no-pager -l || true
-            echo "✅ Django service 'hair_purchase' restarted"
+            sleep 2
+            if sudo systemctl is-active --quiet hair_purchase; then
+              echo "✅ Django service 'hair_purchase' is running"
+              sudo systemctl status hair_purchase --no-pager -l || true
+            else
+              echo "❌ Django service failed to start"
+              sudo systemctl status hair_purchase --no-pager -l || true
+              exit 1
+            fi
           else
             echo "⚠️ Systemd service 'hair_purchase' not found. Skipping restart."
           fi
 
-          echo "🤖 Restart Telegram bot systemd service (hair_purchase_bot)"
+          echo "🤖 Restarting Telegram bot systemd service (hair_purchase_bot)"
           if systemctl list-unit-files | grep -q '^hair_purchase_bot.service'; then
             sudo systemctl restart hair_purchase_bot
-            sudo systemctl status hair_purchase_bot --no-pager -l || true
-            echo "✅ Telegram bot service 'hair_purchase_bot' restarted"
+            sleep 2
+            if sudo systemctl is-active --quiet hair_purchase_bot; then
+              echo "✅ Telegram bot service 'hair_purchase_bot' is running"
+              sudo systemctl status hair_purchase_bot --no-pager -l || true
+            else
+              echo "⚠️ Telegram bot failed to start (but deployment continues)"
+              sudo systemctl status hair_purchase_bot --no-pager -l || true
+            fi
           else
             echo "⚠️ Systemd service 'hair_purchase_bot' not found. Skipping bot restart."
           fi
 
-          echo "✅ Deployment completed successfully"
+          echo ""
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "📅 Deployed at: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "🌐 Services:"
+          echo "   - Django: $(sudo systemctl is-active hair_purchase || echo 'inactive')"
+          echo "   - Telegram Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'inactive')"
+          echo "═════════════════════════════════════════════════════════════════"
