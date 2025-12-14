@@ -4,6 +4,7 @@ Models for hair purchase application
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from hair_app.price_calculator import calculate_hair_price
 
 
 class HairApplication(models.Model):
@@ -23,28 +24,28 @@ class HairApplication(models.Model):
     ]
     
     COLOR_CHOICES = [
-        ('blonde', 'Блонд (светлые)'),
-        ('light', 'Светло-русые'),
-        ('medium', 'Русые'),
-        ('dark', 'Темно-русые'),
-        ('brown', 'Темные (каштановые)'),
+        ('блонд', 'Блонд (светлые)'),
+        ('светло-русые', 'Светло-русые'),
+        ('русые', 'Русые'),
+        ('темно-русые', 'Темно-русые'),
+        ('каштановые', 'Темные (каштановые)'),
     ]
     
     STRUCTURE_CHOICES = [
-        ('thin', 'Славянка (тонкие)'),
-        ('medium', 'Средние'),
-        ('thick', 'Густые'),
+        ('славянка', 'Славянка (тонкие)'),
+        ('среднее', 'Средние'),
+        ('густые', 'Густые'),
     ]
     
     AGE_CHOICES = [
-        ('child', 'Детские (до 14 лет)'),
-        ('adult', 'Взрослые (14+ лет)'),
+        ('детские', 'Детские (до 14 лет)'),
+        ('взрослые', 'Взрослые (14+ лет)'),
     ]
     
     CONDITION_CHOICES = [
-        ('natural', 'Натуральные (не окрашенные)'),
-        ('dyed', 'Окрашенные'),
-        ('perm', 'После химической завивки'),
+        ('натуральные', 'Натуральные (не окрашенные)'),
+        ('окрашенные', 'Окрашенные'),
+        ('после химии', 'После химической завивки'),
     ]
     
     STATUS_CHOICES = [
@@ -137,16 +138,13 @@ class HairApplication(models.Model):
     )
     
     # Расчет стоимости
-    estimated_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name='Предварительная стоимость',
-        help_text='Рассчитанная автоматически'
+    estimated_price = models.IntegerField(
+        default=0,
+        verbose_name='Ориентировочная стоимость',
+        help_text='Автоматически рассчитывается по калькулятору'
     )
     
-    final_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+    final_price = models.IntegerField(
         verbose_name='Итоговая стоимость',
         blank=True,
         null=True,
@@ -187,6 +185,54 @@ class HairApplication(models.Model):
     
     def __str__(self):
         return f'Заявка #{self.pk} - {self.name} ({self.get_status_display()})'
+    
+    def save(self, *args, **kwargs):
+        """
+        Оверрайд save для автоматического расчета цены.
+        Надо нормализовать данные из ролевого селекта в значения для калькулятора.
+        """
+        # Нормализация значений длины
+        length_map = {
+            '40-50': 45,
+            '50-60': 55,
+            '60-70': 65,
+            '70-80': 75,
+            '80-90': 85,
+            '90-100': 95,
+            '100+': 120,
+        }
+        
+        # Нормализация цветов
+        # Оставляем как есть
+        
+        # Нормализация структуры
+        structure_map = {
+            'славянка': 'славянка',
+            'средние': 'среднее',
+            'густые': 'густые',
+        }
+        
+        # Нормализация возраста
+        age_map = {
+            'детские': 'детские',
+            'взрослые': 'взрослые',
+        }
+        
+        # Рассчитываем цену только если её нет
+        if not self.estimated_price:
+            normalized_length = length_map.get(self.length, 50)
+            normalized_structure = structure_map.get(self.structure, 'среднее')
+            normalized_age = age_map.get(self.age, 'взрослые')
+            
+            self.estimated_price = calculate_hair_price(
+                length=normalized_length,
+                color=self.color,
+                condition=self.condition,
+                structure=normalized_structure,
+                age=normalized_age
+            )
+        
+        super().save(*args, **kwargs)
 
 
 class PriceList(models.Model):
@@ -217,9 +263,7 @@ class PriceList(models.Model):
         verbose_name='Состояние'
     )
     
-    base_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
+    base_price = models.IntegerField(
         verbose_name='Базовая цена',
         validators=[MinValueValidator(0)]
     )
@@ -245,7 +289,7 @@ class PriceList(models.Model):
         unique_together = ['length', 'color', 'structure', 'condition']
     
     def __str__(self):
-        return f'{self.get_length_display()} | {self.get_color_display()} | {self.get_structure_display()} - {self.base_price} руб.'
+        return f'{self.get_length_display()} | {self.get_color_display()} | {self.get_structure_display()} - {self.base_price} ₽'
 
 
 class TelegramAdmin(models.Model):
