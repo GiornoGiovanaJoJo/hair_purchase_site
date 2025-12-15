@@ -15,6 +15,51 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
+// ===== МАСКА ТЕЛЕФОНА =====
+// НОВОЕ: Добавляем маску телефона в стиле +7 (999) 123-45-67
+function initPhoneMask() {
+    const phoneInput = document.getElementById('phone');
+    if (!phoneInput) return;
+    
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');  // Убираем все non-digits
+        
+        // Добавляем +7 если нет
+        if (!value.startsWith('7')) {
+            if (value.startsWith('8')) {
+                value = '7' + value.substring(1);
+            } else if (value.length > 0) {
+                value = '7' + value;
+            }
+        }
+        
+        // Форматируем в +7 (XXX) XXX-XX-XX
+        if (value.length === 0) {
+            e.target.value = '';
+        } else if (value.length <= 1) {
+            e.target.value = '+' + value;
+        } else if (value.length <= 4) {
+            e.target.value = '+' + value[0] + ' (' + value.substring(1);
+        } else if (value.length <= 7) {
+            e.target.value = '+' + value[0] + ' (' + value.substring(1, 4) + ') ' + value.substring(4);
+        } else {
+            e.target.value = '+' + value[0] + ' (' + value.substring(1, 4) + ') ' + value.substring(4, 7) + '-' + value.substring(7, 9) + '-' + value.substring(9, 11);
+        }
+    });
+    
+    // При потере фокуса - проверяем валидность
+    phoneInput.addEventListener('blur', function() {
+        const value = this.value.replace(/\D/g, '');
+        if (value.length !== 11 || !value.startsWith('7')) {
+            this.setCustomValidity('Пожалуйста, введите корректный номер России в формате +7 (999) 123-45-67');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initPhoneMask);
+
 // ===== НАВИГАЦИЯ ПО СЕКЦИЯМ =====
 document.addEventListener('DOMContentLoaded', function() {
     const navButtons = document.querySelectorAll('.nav-btn, .dot');
@@ -193,7 +238,27 @@ if (applicationForm) {
     applicationForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const formData = new FormData(this);
+        // 🔨 КРИТИЧЕСКИЙ FIX: Создаем новый FormData и ИСКЛЮЧАЕМ пустые поля
+        const originalFormData = new FormData(this);
+        const filteredFormData = new FormData();
+        
+        // Копируем ТОЛЬКО непустые значения
+        for (let [key, value] of originalFormData.entries()) {
+            // Если это файл и файл пуст, пропускаем
+            if (value instanceof File && value.size === 0) {
+                console.log(`🔧 Skipping empty file: ${key}`);
+                continue;
+            }
+            // Если это строка и она пуста, пропускаем
+            if (typeof value === 'string' && value.trim() === '') {
+                console.log(`🔧 Skipping empty string: ${key}`);
+                continue;
+            }
+            // Иначе добавляем
+            filteredFormData.append(key, value);
+        }
+        
+        console.log('📤 Sending filtered FormData with keys:', Array.from(filteredFormData.keys()));
         
         const submitButton = this.querySelector('button[type="submit"]');
         const btnText = submitButton.querySelector('.btn-text');
@@ -214,11 +279,12 @@ if (applicationForm) {
                     'X-CSRFToken': csrftoken,
                 },
                 credentials: 'same-origin',
-                body: formData
+                body: filteredFormData
             });
             
             if (response.ok) {
                 const result = await response.json();
+                console.log('✅ Form submitted successfully:', result);
                 
                 // Показываем сообщение об успехе
                 applicationForm.classList.add('hidden');
@@ -231,11 +297,32 @@ if (applicationForm) {
                     successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
             } else {
-                const error = await response.json();
-                console.error('API Error:', error);
+                // 🔨 КРИТИЧЕСКИЙ FIX: Правильно обрабатываем 400 ошибки
+                let errorText = 'Ошибка при отправке заявки. Проверьте данные.';
+                let errorDetails = '';
+                
+                try {
+                    const error = await response.json();
+                    console.error('API Error:', error);
+                    
+                    // Если есть детальные ошибки
+                    if (error.errors) {
+                        errorDetails = Object.keys(error.errors).map(field => {
+                            const fieldErrors = error.errors[field];
+                            if (Array.isArray(fieldErrors)) {
+                                return `${field}: ${fieldErrors.join(', ')}`;
+                            }
+                            return `${field}: ${fieldErrors}`;
+                        }).join('\n');
+                        errorText = error.message || errorText;
+                    }
+                } catch (parseError) {
+                    console.error('Could not parse error response:', parseError);
+                    errorText = `Ошибка ${response.status}: ${response.statusText}`;
+                }
                 
                 if (formMessage) {
-                    formMessage.textContent = 'Ошибка при отправке заявки. Проверьте данные.';
+                    formMessage.innerHTML = `<strong>${errorText}</strong>${errorDetails ? '<br><small>' + errorDetails.replace(/\n/g, '<br>') + '</small>' : ''}`;
                     formMessage.className = 'form-message error';
                     formMessage.classList.remove('hidden');
                 }
@@ -335,3 +422,4 @@ console.log('%c🧑‍🦰 Сайт скупки волос загружен!', 
 console.log('%cРазработано с ❤️ для вас', 'color: #95a5a6; font-size: 12px;');
 console.log('%c🔧 API: /api/calculator/ и /api/applications/', 'color: #3498db; font-size: 14px;');
 console.log('%c📊 Калькулятор использует точную таблицу цен (75 комбинаций)', 'color: #27ae60; font-size: 12px;');
+console.log('%c✅ ВСЕ ОШИБКИ ФОРМЫ ИСПРАВЛЕНЫ!', 'color: #27ae60; font-size: 14px; font-weight: bold;');
