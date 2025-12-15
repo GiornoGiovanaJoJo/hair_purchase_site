@@ -2,7 +2,7 @@
 DRF Serializers for hair purchase application
 """
 from rest_framework import serializers
-from .models import HairApplication, PriceList
+from .models import HairApplication, PriceList, normalize_phone
 
 
 class HairApplicationSerializer(serializers.ModelSerializer):
@@ -23,14 +23,17 @@ class HairApplicationSerializer(serializers.ModelSerializer):
     
     def validate_phone(self, value):
         """
-        Валидируем телефон.
-        Принимаем ЛЮБОЙ формат.
+        ✅ НОРМАЛИЗИРУЕМ ТЕЛЕФОН ПЕРЕД ВАЛИДАЦИЕЙ!
+        Принимаем ЛЮБОЙ формат и конвертируем в +7 (999) 123-45-67
         """
         if not value:
             raise serializers.ValidationError('Телефон должен быть указан')
         
-        # Проверяем на наличие 11 цифр
-        digits = ''.join(c for c in str(value) if c.isdigit())
+        # ✅ НОРМАЛИЗИРУЕМ ТЕЛЕФОН!
+        normalized = normalize_phone(value)
+        
+        # Проверяем что нормализация прошла успешно
+        digits = ''.join(c for c in str(normalized) if c.isdigit())
         if len(digits) != 11:
             raise serializers.ValidationError(
                 'Телефон должен содержать 11 цифр. '
@@ -43,7 +46,8 @@ class HairApplicationSerializer(serializers.ModelSerializer):
                 'Отправьте: +7 999 123 45 67'
             )
         
-        return value
+        # Возвращаем НОРМАЛИЗИРОВАННЫЙ телефон!
+        return normalized
     
     def validate_name(self, value):
         """
