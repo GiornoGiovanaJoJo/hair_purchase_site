@@ -11,6 +11,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 from .models import HairApplication, PriceList
@@ -83,14 +84,59 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = HairApplicationSerializer
     permission_classes = [AllowAny]
     
+    def create(self, request, *args, **kwargs):
+        """
+        ✅ ПЕРЕОПРЕДЕЛЁННЫЙ create() для ПРАВИЛЬНОЙ обработки ошибок валидации.
+        Это КРИТИЧНО для возврата понятных ошибок вместо generic 400.
+        """
+        try:
+            logger.info(f"Creating hair application with data: {request.data}")
+            
+            # Создаём serializer с данными
+            serializer = self.get_serializer(data=request.data)
+            
+            # Пытаемся валидировать
+            try:
+                serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                # ✅ Перехватываем ошибки валидации и возвращаем в понятном формате
+                logger.warning(f"Validation errors: {e.detail}")
+                return Response(
+                    {
+                        'status': 'error',
+                        'message': 'Ошибка при заполнении формы. Проверьте все поля.',
+                        'errors': e.detail
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Если валидация прошла, выполняем perform_create
+            self.perform_create(serializer)
+            
+            return Response(
+                {
+                    'status': 'success',
+                    'message': 'Заявка успешно отправлена!',
+                    'data': serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+            
+        except Exception as e:
+            logger.error(f'Error creating hair application: {e}', exc_info=True)
+            return Response(
+                {
+                    'status': 'error',
+                    'message': f'Внутренняя ошибка сервера: {str(e)}',
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     def perform_create(self, serializer):
         """
         Save application and calculate estimated price.
         """
         try:
-            # Log incoming data for debugging
-            logger.info(f"Creating hair application with data: {self.request.data}")
-            
             # Нормализуем длину перед передачей в калькулятор
             normalized_length = normalize_length_for_calculator(serializer.validated_data['length'])
             
@@ -141,7 +187,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
                 logger.error(f'Error sending Telegram notification for application #{application.id}: {e}')
                 
         except Exception as e:
-            logger.error(f'Error creating hair application: {e}', exc_info=True)
+            logger.error(f'Error in perform_create: {e}', exc_info=True)
             raise
 
 
