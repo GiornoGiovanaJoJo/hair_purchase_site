@@ -140,28 +140,45 @@ def calculate_price(request):
                     condition=condition
                 )
                 
-                # Parse length range to get numeric value for table lookup
-                try:
-                    if isinstance(length, str) and '-' in length:
-                        # Extract first number from range like "50-60"
-                        length_num = int(length.split('-')[0])
-                    else:
-                        length_num = int(length) if length else 50
-                except (ValueError, AttributeError) as e:
-                    logger.warning(f"Could not parse length {length}: {e}")
-                    length_num = 50
+                # Determine length_range for table lookup (supports both '100+' string and numeric values)
+                length_range = None
                 
-                # Determine length range for table lookup
-                if length_num < 50:
-                    length_range = '40-50'
-                elif length_num < 60:
-                    length_range = '50-60'
-                elif length_num < 80:
-                    length_range = '60-80'
-                elif length_num < 100:
-                    length_range = '80-100'
+                # Check if length is already a range string like '100+'
+                if isinstance(length, str):
+                    length_str = str(length).strip().lower()
+                    if length_str == '100+':
+                        length_range = '100+'
+                    elif '-' in length_str:
+                        # Extract first number from range like "50-60"
+                        try:
+                            length_num = int(length_str.split('-')[0])
+                        except (ValueError, AttributeError):
+                            length_num = 50
+                    else:
+                        # Try to parse as number
+                        try:
+                            length_num = int(length_str)
+                        except ValueError:
+                            length_num = 50
                 else:
-                    length_range = '100+'
+                    # Already a number
+                    try:
+                        length_num = int(length) if length else 50
+                    except (ValueError, TypeError):
+                        length_num = 50
+                
+                # Determine range from numeric length if not already determined
+                if length_range is None:
+                    if length_num < 50:
+                        length_range = '40-50'
+                    elif length_num < 60:
+                        length_range = '50-60'
+                    elif length_num < 80:
+                        length_range = '60-80'
+                    elif length_num < 100:
+                        length_range = '80-100'
+                    else:
+                        length_range = '100+'
                 
                 # Normalize color for table lookup
                 color_map = {
@@ -194,7 +211,7 @@ def calculate_price(request):
                     price_min = estimated_price
                     price_max = estimated_price
                 
-                logger.info(f"Calculated prices - Min: {price_min}, Max: {price_max}, Exact: {estimated_price}")
+                logger.info(f"Calculated prices - Min: {price_min}, Max: {price_max}, Exact: {estimated_price} for range {length_range}")
                 
                 return Response({
                     'estimated_price': float(estimated_price),
