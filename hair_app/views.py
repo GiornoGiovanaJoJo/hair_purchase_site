@@ -20,7 +20,7 @@ from .serializers import (
     PriceListSerializer
 )
 from .utils import calculate_hair_price
-from .price_calculator import PRICE_TABLE
+from .price_calculator import calculate_hair_price as calc_hair_price, PRICE_TABLE
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,44 @@ def index(request):
     Main page view.
     """
     return render(request, 'index.html')
+
+
+def normalize_length_for_calculator(length_input):
+    """
+    Нормализует длину волос из формы (строка типа '100+' или '50-60')
+    в значение, которое понимает calculate_hair_price.
+    
+    Args:
+        length_input (str): Строка из формы, например '100+', '50-60', etc.
+    
+    Returns:
+        str: Значение для PRICE_TABLE lookup, например '100+', '50-60', etc.
+    """
+    if isinstance(length_input, str):
+        length_str = str(length_input).strip().lower()
+        # Если это прямо '100+', возвращаем как есть
+        if length_str == '100+':
+            return '100+'
+        # Если это диапазон типа '50-60', возвращаем как есть
+        elif '-' in length_str:
+            return length_str
+        # Если это число, конвертируем в диапазон
+        else:
+            try:
+                length_num = int(length_str)
+                if length_num < 50:
+                    return '40-50'
+                elif length_num < 60:
+                    return '50-60'
+                elif length_num < 80:
+                    return '60-80'
+                elif length_num < 100:
+                    return '80-100'
+                else:
+                    return '100+'
+            except ValueError:
+                return '50-60'  # Default
+    return '50-60'  # Default
 
 
 @extend_schema_view(
@@ -53,9 +91,12 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
             # Log incoming data for debugging
             logger.info(f"Creating hair application with data: {self.request.data}")
             
+            # Нормализуем длину перед передачей в калькулятор
+            normalized_length = normalize_length_for_calculator(serializer.validated_data['length'])
+            
             # Calculate estimated price
-            estimated_price = calculate_hair_price(
-                length=serializer.validated_data['length'],
+            estimated_price = calc_hair_price(
+                length=normalized_length,  # Теперь это строка типа '100+' или '50-60'
                 color=serializer.validated_data['color'],
                 structure=serializer.validated_data['structure'],
                 age=serializer.validated_data.get('age', 'взрослые'),
@@ -131,54 +172,21 @@ def calculate_price(request):
                 age = serializer.validated_data.get('age', 'взрослые')
                 condition = serializer.validated_data['condition']
                 
+                # КРИТИЧНО: Нормализуем длину перед передачей в калькулятор!
+                normalized_length = normalize_length_for_calculator(length)
+                logger.info(f"Normalized length: {length} → {normalized_length}")
+                
                 # Get exact price for selected structure
-                estimated_price = calculate_hair_price(
-                    length=length,
+                estimated_price = calc_hair_price(
+                    length=normalized_length,  # Теперь это строка типа '100+' или '50-60'
                     color=color,
                     structure=structure,
                     age=age,
                     condition=condition
                 )
                 
-                # Determine length_range for table lookup (supports both '100+' string and numeric values)
-                length_range = None
-                
-                # Check if length is already a range string like '100+'
-                if isinstance(length, str):
-                    length_str = str(length).strip().lower()
-                    if length_str == '100+':
-                        length_range = '100+'
-                    elif '-' in length_str:
-                        # Extract first number from range like "50-60"
-                        try:
-                            length_num = int(length_str.split('-')[0])
-                        except (ValueError, AttributeError):
-                            length_num = 50
-                    else:
-                        # Try to parse as number
-                        try:
-                            length_num = int(length_str)
-                        except ValueError:
-                            length_num = 50
-                else:
-                    # Already a number
-                    try:
-                        length_num = int(length) if length else 50
-                    except (ValueError, TypeError):
-                        length_num = 50
-                
-                # Determine range from numeric length if not already determined
-                if length_range is None:
-                    if length_num < 50:
-                        length_range = '40-50'
-                    elif length_num < 60:
-                        length_range = '50-60'
-                    elif length_num < 80:
-                        length_range = '60-80'
-                    elif length_num < 100:
-                        length_range = '80-100'
-                    else:
-                        length_range = '100+'
+                # length_range уже нормализирована
+                length_range = normalized_length
                 
                 # Normalize color for table lookup
                 color_map = {
