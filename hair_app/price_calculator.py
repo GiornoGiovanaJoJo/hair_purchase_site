@@ -74,8 +74,8 @@ def calculate_hair_price(
             - 'славянка' (тонкие)
             - 'среднее'
             - 'густые'
-        condition (str): Состояние волос (НЕ ОПОЛНЕНО, только для совместимости)
-        age (str): Возраст (НЕ ОПОЛНеНО, только для совместимости)
+        condition (str): Состояние волос (НЕ ИСПОЛЬЗОВАНО, только для совместимости)
+        age (str): Возраст (НЕ ИСПОЛЬЗОВАНО, только для совместимости)
     
     Returns:
         int: Цена в рублях
@@ -88,8 +88,26 @@ def calculate_hair_price(
     """
     
     try:
-        # Нормализуем длину
-        length = int(length) if length else 50
+        # Нормализуем длину - извлекаем число из диапазона
+        if isinstance(length, str):
+            if '-' in length:
+                # Извлекаем первое число из диапазона (например "50-60" -> 50)
+                try:
+                    length = int(length.split('-')[0])
+                except (ValueError, IndexError):
+                    length = 50
+            else:
+                try:
+                    length = int(length)
+                except ValueError:
+                    length = 50
+        else:
+            try:
+                length = int(length) if length else 50
+            except (ValueError, TypeError):
+                length = 50
+        
+        # Обеспечиваем диапазон для длины
         if length < 40:
             length = 40
         elif length > 150:
@@ -133,9 +151,23 @@ def calculate_hair_price(
         }
         structure = structure_mapping.get(structure, 'среднее')
         
-        # Получаем цену из таблицы
-        price = PRICE_TABLE[length_range][color][structure]
-        return int(price)
+        # Получаем цену из таблицы с проверкой
+        try:
+            if length_range in PRICE_TABLE:
+                if color in PRICE_TABLE[length_range]:
+                    if structure in PRICE_TABLE[length_range][color]:
+                        price = PRICE_TABLE[length_range][color][structure]
+                        return int(price)
+        except (KeyError, TypeError) as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error accessing PRICE_TABLE[{length_range}][{color}][{structure}]: {e}')
+        
+        # Fallback: если не найдено в таблице
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f'Price not found for {length_range}/{color}/{structure}, using default')
+        return 30000  # Safe default
         
     except Exception as e:
         import logging
@@ -154,26 +186,51 @@ def get_price_range(length: int = 50) -> dict:
     Returns:
         dict: {'min': int, 'max': int}
     """
-    length = int(length) if length else 50
-    if length < 50:
-        length_range = '40-50'
-    elif length < 60:
-        length_range = '50-60'
-    elif length < 80:
-        length_range = '60-80'
-    elif length < 100:
-        length_range = '80-100'
-    else:
-        length_range = '100+'
-    
-    prices = []
-    for color_data in PRICE_TABLE[length_range].values():
-        prices.extend(color_data.values())
-    
-    return {
-        'min': min(prices),
-        'max': max(prices),
-    }
+    try:
+        # Parse length if it's a string range
+        if isinstance(length, str) and '-' in length:
+            try:
+                length = int(length.split('-')[0])
+            except (ValueError, IndexError):
+                length = 50
+        else:
+            length = int(length) if length else 50
+        
+        # Determine range
+        if length < 50:
+            length_range = '40-50'
+        elif length < 60:
+            length_range = '50-60'
+        elif length < 80:
+            length_range = '60-80'
+        elif length < 100:
+            length_range = '80-100'
+        else:
+            length_range = '100+'
+        
+        prices = []
+        try:
+            for color_data in PRICE_TABLE[length_range].values():
+                prices.extend(color_data.values())
+        except (KeyError, TypeError, ValueError) as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error getting price range for {length_range}: {e}')
+            return {'min': 30000, 'max': 30000}
+        
+        if prices:
+            return {
+                'min': min(prices),
+                'max': max(prices),
+            }
+        else:
+            return {'min': 30000, 'max': 30000}
+            
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Error in get_price_range: {e}', exc_info=True)
+        return {'min': 30000, 'max': 30000}
 
 
 if __name__ == '__main__':
@@ -181,7 +238,7 @@ if __name__ == '__main__':
     print("ПРИМЕРЫ РАСЧЕТА ПО ТОЧНОЙ ТАБЛИЦЕ")
     print("=" * 70)
     
-    # ОНО ИСПРАВЛЕНО! (было 'gusty' нынче 'густые')
+    # ОНО ИСПРАВЛЕНО! (было 'gusty' теперь 'густые')
     tests = [
         (60, 'блонд', 'славянка', 35000),
         (60, 'блонд', 'среднее', 30000),
