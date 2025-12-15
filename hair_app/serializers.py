@@ -13,9 +13,9 @@ class HairApplicationSerializer(serializers.ModelSerializer):
     Serializer for hair applications.
     """
     
-    # 🔧 CRITICAL FIX: photo2 and photo3 should allow empty strings!
-    photo2 = serializers.ImageField(required=False, allow_null=True, allow_blank=True)
-    photo3 = serializers.ImageField(required=False, allow_null=True, allow_blank=True)
+    # 🔧 CRITICAL FIX: photo2 and photo3 should allow empty (not provide them if empty)
+    photo2 = serializers.ImageField(required=False, allow_null=True)
+    photo3 = serializers.ImageField(required=False, allow_null=True)
     
     class Meta:
         model = HairApplication
