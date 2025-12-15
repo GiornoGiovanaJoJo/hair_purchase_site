@@ -29,11 +29,16 @@ class HairApplicationSerializer(serializers.ModelSerializer):
         if not value:
             raise serializers.ValidationError('Телефон должен быть указан')
         
+        print(f"🔧 DEBUG: validate_phone called with value: {value}")
+        
         # ✅ НОРМАЛИЗИРУЕМ ТЕЛЕФОН!
         normalized = normalize_phone(value)
+        print(f"🔧 DEBUG: normalize_phone returned: {normalized}")
         
         # Проверяем что нормализация прошла успешно
         digits = ''.join(c for c in str(normalized) if c.isdigit())
+        print(f"🔧 DEBUG: extracted digits: {digits}, count: {len(digits)}")
+        
         if len(digits) != 11:
             raise serializers.ValidationError(
                 'Телефон должен содержать 11 цифр. '
@@ -47,6 +52,7 @@ class HairApplicationSerializer(serializers.ModelSerializer):
             )
         
         # Возвращаем НОРМАЛИЗИРОВАННЫЙ телефон!
+        print(f"🔧 DEBUG: returning normalized phone: {normalized}")
         return normalized
     
     def validate_name(self, value):
@@ -77,6 +83,9 @@ class HairApplicationSerializer(serializers.ModelSerializer):
         """
         Общая валидация.
         """
+        print(f"🔧 DEBUG: validate() called with data keys: {data.keys()}")
+        print(f"🔧 DEBUG: phone in data: {data.get('phone')}")
+        
         # Проверяем все соматентые селекты
         required_fields = ['length', 'color', 'structure', 'age', 'condition', 'name', 'phone', 'photo1']
         missing = [f for f in required_fields if not data.get(f)]
