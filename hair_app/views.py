@@ -140,15 +140,25 @@ def calculate_price(request):
                     condition=condition
                 )
                 
-                # Get price range for this length and color (across all structures)
-                length_int = int(length) if length else 50
-                if length_int < 50:
+                # Parse length range to get numeric value for table lookup
+                try:
+                    if isinstance(length, str) and '-' in length:
+                        # Extract first number from range like "50-60"
+                        length_num = int(length.split('-')[0])
+                    else:
+                        length_num = int(length) if length else 50
+                except (ValueError, AttributeError) as e:
+                    logger.warning(f"Could not parse length {length}: {e}")
+                    length_num = 50
+                
+                # Determine length range for table lookup
+                if length_num < 50:
                     length_range = '40-50'
-                elif length_int < 60:
+                elif length_num < 60:
                     length_range = '50-60'
-                elif length_int < 80:
+                elif length_num < 80:
                     length_range = '60-80'
-                elif length_int < 100:
+                elif length_num < 100:
                     length_range = '80-100'
                 else:
                     length_range = '100+'
@@ -167,11 +177,20 @@ def calculate_price(request):
                 normalized_color = color_map.get(str(color).strip().lower(), 'блонд')
                 
                 # Get min and max prices for this length and color
-                if length_range in PRICE_TABLE and normalized_color in PRICE_TABLE[length_range]:
-                    prices = list(PRICE_TABLE[length_range][normalized_color].values())
-                    price_min = min(prices)
-                    price_max = max(prices)
-                else:
+                price_min = None
+                price_max = None
+                
+                try:
+                    if length_range in PRICE_TABLE and normalized_color in PRICE_TABLE[length_range]:
+                        prices = list(PRICE_TABLE[length_range][normalized_color].values())
+                        if prices:
+                            price_min = min(prices)
+                            price_max = max(prices)
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.warning(f"Error getting price range from table: {e}")
+                
+                # Fallback if unable to get range from table
+                if price_min is None or price_max is None:
                     price_min = estimated_price
                     price_max = estimated_price
                 
