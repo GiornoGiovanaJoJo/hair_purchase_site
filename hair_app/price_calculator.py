@@ -63,7 +63,7 @@ def calculate_hair_price(
     Рассчитывает цену волос по ТОЧНОЙ таблице.
     
     Args:
-        length (int): Длина волос в см (40-150)
+        length (int): Длина волос в см (40-150) или строка '100+'
         color (str): Цвет волос
             - 'блонд'
             - 'светло-русые'
@@ -85,45 +85,60 @@ def calculate_hair_price(
         35000
         >>> calculate_hair_price(60, 'блонд', 'среднее')
         30000
+        >>> calculate_hair_price('100+', 'блонд', 'славянка')
+        65000
     """
     
     try:
-        # Нормализуем длину - извлекаем число из диапазона
+        # Определяем диапазон длины ПЕРЕД парсингом числа
+        length_range = None
+        
+        # Сначала проверяем строки вроде '100+'
         if isinstance(length, str):
-            if '-' in length:
-                # Извлекаем первое число из диапазона (например "50-60" -> 50)
+            length_str = str(length).strip().lower()
+            
+            # Если прямо '100+', то это диапазон '100+'
+            if length_str == '100+':
+                length_range = '100+'
+            # Если диапазон типа '50-60'
+            elif '-' in length_str:
+                # Берём первую цифру из диапазона
                 try:
-                    length = int(length.split('-')[0])
+                    length_num = int(length_str.split('-')[0])
                 except (ValueError, IndexError):
-                    length = 50
+                    length_num = 50
             else:
+                # Пытаемся парсить как число
                 try:
-                    length = int(length)
+                    length_num = int(length_str)
                 except ValueError:
-                    length = 50
+                    length_num = 50
         else:
+            # Это уже число
             try:
-                length = int(length) if length else 50
+                length_num = int(length) if length else 50
             except (ValueError, TypeError):
-                length = 50
+                length_num = 50
         
-        # Обеспечиваем диапазон для длины
-        if length < 40:
-            length = 40
-        elif length > 150:
-            length = 150
-        
-        # Определяем диапазон длины
-        if length < 50:
-            length_range = '40-50'
-        elif length < 60:
-            length_range = '50-60'
-        elif length < 80:
-            length_range = '60-80'
-        elif length < 100:
-            length_range = '80-100'
-        else:
-            length_range = '100+'
+        # Если диапазон не определён через '100+', определяем по числу
+        if length_range is None:
+            # Нормализуем длину
+            if length_num < 40:
+                length_num = 40
+            elif length_num > 150:
+                length_num = 150
+            
+            # Определяем диапазон по числу
+            if length_num < 50:
+                length_range = '40-50'
+            elif length_num < 60:
+                length_range = '50-60'
+            elif length_num < 80:
+                length_range = '60-80'
+            elif length_num < 100:
+                length_range = '80-100'
+            else:
+                length_range = '100+'
         
         # Нормализуем цвет
         color = str(color).strip().lower()
@@ -151,14 +166,14 @@ def calculate_hair_price(
         }
         structure = structure_mapping.get(structure, 'среднее')
         
-        # Получаем цену из таблицы с проверкой
+        # Получаем цену из таблицы с проверками
         try:
             if length_range in PRICE_TABLE:
                 if color in PRICE_TABLE[length_range]:
                     if structure in PRICE_TABLE[length_range][color]:
                         price = PRICE_TABLE[length_range][color][structure]
                         return int(price)
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError, AttributeError) as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f'Error accessing PRICE_TABLE[{length_range}][{color}][{structure}]: {e}')
@@ -181,32 +196,47 @@ def get_price_range(length: int = 50) -> dict:
     Возвращает минимальную и максимальную цену для заданной длины.
     
     Args:
-        length (int): Длина в см
+        length (int): Длина в см или строка '100+'
     
     Returns:
         dict: {'min': int, 'max': int}
     """
     try:
-        # Parse length if it's a string range
-        if isinstance(length, str) and '-' in length:
-            try:
-                length = int(length.split('-')[0])
-            except (ValueError, IndexError):
-                length = 50
-        else:
-            length = int(length) if length else 50
+        # Определяем диапазон
+        length_range = None
         
-        # Determine range
-        if length < 50:
-            length_range = '40-50'
-        elif length < 60:
-            length_range = '50-60'
-        elif length < 80:
-            length_range = '60-80'
-        elif length < 100:
-            length_range = '80-100'
+        if isinstance(length, str):
+            length_str = str(length).strip().lower()
+            if length_str == '100+':
+                length_range = '100+'
+            elif '-' in length_str:
+                try:
+                    length_num = int(length_str.split('-')[0])
+                except (ValueError, IndexError):
+                    length_num = 50
+            else:
+                try:
+                    length_num = int(length_str)
+                except ValueError:
+                    length_num = 50
         else:
-            length_range = '100+'
+            try:
+                length_num = int(length) if length else 50
+            except (ValueError, TypeError):
+                length_num = 50
+        
+        # Если диапазон не определён
+        if length_range is None:
+            if length_num < 50:
+                length_range = '40-50'
+            elif length_num < 60:
+                length_range = '50-60'
+            elif length_num < 80:
+                length_range = '60-80'
+            elif length_num < 100:
+                length_range = '80-100'
+            else:
+                length_range = '100+'
         
         prices = []
         try:
@@ -238,15 +268,17 @@ if __name__ == '__main__':
     print("ПРИМЕРЫ РАСЧЕТА ПО ТОЧНОЙ ТАБЛИЦЕ")
     print("=" * 70)
     
-    # ОНО ИСПРАВЛЕНО! (было 'gusty' теперь 'густые')
     tests = [
         (60, 'блонд', 'славянка', 35000),
         (60, 'блонд', 'среднее', 30000),
         (60, 'русые', 'среднее', 28000),
         (100, 'каштановые', 'густые', 58000),
+        ('100+', 'блонд', 'славянка', 65000),  # ТЕСТ ДЛЯ БОЛЕЕ 100 СМ
+        ('100+', 'блонд', 'среднее', 60000),   # ТЕСТ ДЛЯ БОЛЕЕ 100 СМ
+        ('100+', 'каштановые', 'громкие', 58000),  # ТЕСТ ДЛЯ БОЛЕЕ 100 СМ
     ]
     
     for length, color, structure, expected in tests:
         result = calculate_hair_price(length, color, structure)
         status = "✓" if result == expected else "✗"
-        print(f"{status} {length}см, {color}, {structure}: {result:,} ₽")
+        print(f"{status} {length}, {color}, {structure}: {result:,} ₽ (ожидается {expected:,})")
