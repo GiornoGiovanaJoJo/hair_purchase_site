@@ -83,23 +83,35 @@ def normalize_request_data(request):
         'phone': '+79265383145'  ← СТРОКА!
         'name': 'Данил'  ← СТРОКА!
     
-    Это ЭКСТРАКТИТ первый элемент из списка если это список.
+    Эта функция ИЗВЛЕКАЕТ первый элемент из списка если это список.
     """
-    data = request.data.copy()  # Shallow copy
+    # Создаём НОВЫЙ dict (не копируем QueryDict)
+    normalized = {}
     
-    for key, value in data.items():
-        # Если это список с одним элементом, экстрактим его
-        if isinstance(value, list) and len(value) == 1:
-            data[key] = value[0]
-            logger.info(f"🔧 Normalized {key}: list [{value[0]}] → string '{value[0]}'")
-        # Если это пустой список или список с пустой строкой, оставляем пустым
-        elif isinstance(value, list) and (len(value) == 0 or (len(value) == 1 and value[0] == '')):
-            data[key] = ''
-            logger.info(f"🔧 Normalized {key}: empty/list with empty string → empty string''")
+    for key, value in request.data.items():
+        logger.info(f"🔧 Processing key='{key}', value_type={type(value).__name__}, value={value}")
+        
+        # Если это список с одним элементом, извлекаем его
+        if isinstance(value, list):
+            if len(value) == 1:
+                # Извлекаем первый элемент
+                normalized[key] = value[0]
+                logger.info(f"🔧 Converted list with 1 element: [{value[0]}] → '{value[0]}'")
+            elif len(value) == 0:
+                # Пустой список → пустая строка
+                normalized[key] = ''
+                logger.info(f"🔧 Converted empty list: [] → ''")
+            else:
+                # Список с несколькими элементами → присоединяем первый
+                normalized[key] = value[0]
+                logger.info(f"🔧 Converted list with {len(value)} elements: {value} → '{value[0]}'")
+        else:
+            # Не список → оставляем как есть
+            normalized[key] = value
+            logger.info(f"🔧 Not a list, keeping as-is: {value}")
     
-    print(f"🔧 Normalized request data: {dict(data)}")
-    logger.info(f"🔧 Normalized request data: {dict(data)}")
-    return data
+    logger.info(f"🔧 Final normalized data: {normalized}")
+    return normalized
 
 
 @extend_schema_view(
@@ -125,7 +137,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
             
             # 🔧 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки)
             normalized_data = normalize_request_data(request)
-            logger.info(f"Creating hair application with NORMALIZED data: {dict(normalized_data)}")
+            logger.info(f"Creating hair application with NORMALIZED data: {normalized_data}")
             
             # Создаём serializer с НОРМАЛИЗОВАННЫМИ данными
             serializer = self.get_serializer(data=normalized_data)
