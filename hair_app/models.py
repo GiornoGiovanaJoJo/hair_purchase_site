@@ -7,6 +7,43 @@ from django.utils.translation import gettext_lazy as _
 from hair_app.price_calculator import calculate_hair_price
 
 
+def normalize_phone(phone_value):
+    """
+    Нормализует телефон в формат +7 (999) 123-45-67
+    Принимает:
+    - +79991234567
+    - +7 999 123 4567
+    - +7 (999) 123-45-67
+    - 79991234567
+    - 89991234567
+    """
+    if not phone_value:
+        return phone_value
+    
+    # Убираем все символы кроме цифр и +
+    cleaned = ''.join(c for c in str(phone_value) if c.isdigit() or c == '+')
+    
+    # Если нет +, добавляем
+    if not cleaned.startswith('+'):
+        # Если начинается с 8, заменяем на 7
+        if cleaned.startswith('8'):
+            cleaned = '7' + cleaned[1:]
+        # Если не начинается с 7, добавляем +7
+        elif not cleaned.startswith('7'):
+            cleaned = '7' + cleaned
+        # Иначе просто добавляем +
+        else:
+            cleaned = '+' + cleaned
+    
+    # Проверяем, что это российский номер и имеет 11 цифр
+    digits = ''.join(c for c in cleaned if c.isdigit())
+    if not (cleaned.startswith('+7') and len(digits) == 11):
+        return phone_value  # Возвращаем оригинальное значение если не валидно
+    
+    # Форматируем в +7 (999) 123-45-67
+    return f"+{digits[0]} ({digits[1:4]}) {digits[4:7]}-{digits[7:9]}-{digits[9:11]}"
+
+
 class HairApplication(models.Model):
     """
     Заявка на продажу волос
@@ -55,7 +92,7 @@ class HairApplication(models.Model):
         ('completed', 'Завершена'),
     ]
     
-    # Валидатор телефона
+    # Валидатор телефона - ТЕПЕРЬ более гибкий
     phone_validator = RegexValidator(
         regex=r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$',
         message='Введите телефон в формате +7 (999) 123-45-67',
@@ -194,11 +231,21 @@ class HairApplication(models.Model):
     def __str__(self):
         return f'Заявка #{self.pk} - {self.name} ({self.get_status_display()})'
     
+    def clean(self):
+        """
+        Очищаем и нормализуем данные перед сохранением.
+        """
+        # Нормализуем телефон
+        self.phone = normalize_phone(self.phone)
+    
     def save(self, *args, **kwargs):
         """
         Оверрайд save для автоматического расчета цены.
         Надо нормализовать данные из модели для калькулятора.
         """
+        # Вызываем clean() для нормализации
+        self.clean()
+        
         # Нормализация значений длины - ТЕПЕРЬ ИСПРАВЛЕНО
         length_map = {
             '40-50': 45,
