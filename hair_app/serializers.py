@@ -30,7 +30,7 @@ class HairApplicationSerializer(serializers.ModelSerializer):
     
     def validate_phone(self, value):
         """
-        ✅ НОРМАЛИЗИРУЕМ ТЕЛЕФОН ПЕРЕД ВАЛИДАЦИЕЙ!
+        ✅ КРИТИЧЕСКИЙ FIX: НОРМАЛИЗИРУЕМ ТЕЛЕФОН ПЕРЕД ВАЛИДАЦИЕЙ!
         Принимаем ЛЮБОЙ формат и конвертируем в +7 (999) 123-45-67
         """
         if not value:
@@ -75,7 +75,7 @@ class HairApplicationSerializer(serializers.ModelSerializer):
     
     def validate_photo1(self, value):
         """
-        Валидируем ОБАЗАТЕЛЬНОЕ фото 1.
+        Валидируем ОБЯЗАТЕЛЬНОЕ фото 1.
         """
         if not value:
             raise serializers.ValidationError(
