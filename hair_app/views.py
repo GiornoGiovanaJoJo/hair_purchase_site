@@ -14,7 +14,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.exceptions import ValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
-from .models import HairApplication, PriceList
+from .models import HairApplication, PriceList, normalize_phone
 from .serializers import (
     HairApplicationSerializer,
     PriceCalculatorSerializer,
@@ -71,6 +71,37 @@ def normalize_length_for_calculator(length_input):
     return '50-60'  # Default
 
 
+def normalize_request_data(request):
+    """
+    🔧 КРИТИЧЕСКИЙ FIX: Конвертирует данные из HTML Form (списки) в JSON-like формат (строки)
+    
+    HTML Form отправляет:
+        'phone': ['+79265383145']  ← СПИСОК!
+        'name': ['Данил']  ← СПИСОК!
+    
+    DRF ожидает:
+        'phone': '+79265383145'  ← СТРОКА!
+        'name': 'Данил'  ← СТРОКА!
+    
+    Это ЭКСТРАКТИТ первый элемент из списка если это список.
+    """
+    data = request.data.copy()  # Shallow copy
+    
+    for key, value in data.items():
+        # Если это список с одним элементом, экстрактим его
+        if isinstance(value, list) and len(value) == 1:
+            data[key] = value[0]
+            logger.info(f"🔧 Normalized {key}: list [{value[0]}] → string '{value[0]}'")
+        # Если это пустой список или список с пустой строкой, оставляем пустым
+        elif isinstance(value, list) and (len(value) == 0 or (len(value) == 1 and value[0] == '')):
+            data[key] = ''
+            logger.info(f"🔧 Normalized {key}: empty/list with empty string → empty string''")
+    
+    print(f"🔧 Normalized request data: {dict(data)}")
+    logger.info(f"🔧 Normalized request data: {dict(data)}")
+    return data
+
+
 @extend_schema_view(
     list=extend_schema(description='Получить список заявок'),
     create=extend_schema(description='Создать новую заявку'),
@@ -90,10 +121,14 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
         Это КРИТИЧНО для возврата понятных ошибок вместо generic 400.
         """
         try:
-            logger.info(f"Creating hair application with data: {request.data}")
+            logger.info(f"Creating hair application with ORIGINAL data: {request.data}")
             
-            # Создаём serializer с данными
-            serializer = self.get_serializer(data=request.data)
+            # 🔧 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки)
+            normalized_data = normalize_request_data(request)
+            logger.info(f"Creating hair application with NORMALIZED data: {dict(normalized_data)}")
+            
+            # Создаём serializer с НОРМАЛИЗОВАННЫМИ данными
+            serializer = self.get_serializer(data=normalized_data)
             
             # Пытаемся валидировать
             try:
