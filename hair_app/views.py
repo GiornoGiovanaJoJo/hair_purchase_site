@@ -83,7 +83,7 @@ def normalize_request_data(request):
         'phone': '+79265383145'  ← СТРОКА!
         'name': 'Данил'  ← СТРОКА!
     
-    Эта функция ИЗВЛЕКАЕТ первый элемент из списка если это список.
+    Эта функция ИЗВЛЕКАЕТ первый элемент из списка и УДАЛЯЕТ пустые значения.
     """
     # Создаём НОВЫЙ dict (не копируем QueryDict)
     normalized = {}
@@ -91,24 +91,30 @@ def normalize_request_data(request):
     for key, value in request.data.items():
         logger.info(f"🔧 Processing key='{key}', value_type={type(value).__name__}, value={value}")
         
-        # Если это список с одним элементом, извлекаем его
+        # Если это список с одным элементом, извлекаем его
         if isinstance(value, list):
             if len(value) == 1:
                 # Извлекаем первый элемент
                 normalized[key] = value[0]
                 logger.info(f"🔧 Converted list with 1 element: [{value[0]}] → '{value[0]}'")
             elif len(value) == 0:
-                # Пустой список → пустая строка
-                normalized[key] = ''
-                logger.info(f"🔧 Converted empty list: [] → ''")
+                # Пустой список → ПОМИНАЕМ (don't add to dict)
+                logger.info(f"🔧 Skipping empty list for key '{key}'")
+                continue
             else:
                 # Список с несколькими элементами → присоединяем первый
                 normalized[key] = value[0]
                 logger.info(f"🔧 Converted list with {len(value)} elements: {value} → '{value[0]}'")
         else:
-            # Не список → оставляем как есть
-            normalized[key] = value
-            logger.info(f"🔧 Not a list, keeping as-is: {value}")
+            # Не список → проверяем пусто ли
+            if isinstance(value, str) and value == '':
+                # Пустая строка → ПОМИНАЕМ (don't add to dict)
+                logger.info(f"🔧 Skipping empty string for key '{key}'")
+                continue
+            else:
+                # Непустая строка или другое жанре → оставляем
+                normalized[key] = value
+                logger.info(f"🔧 Keeping as-is: {value}")
     
     logger.info(f"🔧 Final normalized data: {normalized}")
     return normalized
@@ -135,7 +141,7 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
         try:
             logger.info(f"Creating hair application with ORIGINAL data: {request.data}")
             
-            # 🔧 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки)
+            # 🔧 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки, удаляем пустые)
             normalized_data = normalize_request_data(request)
             logger.info(f"Creating hair application with NORMALIZED data: {normalized_data}")
             
