@@ -4,43 +4,14 @@ with custom dashboard and beautiful UI
 """
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import path
 from .models import HairApplication, PriceList, TelegramAdmin
-from .admin_views import get_dashboard_stats, get_chart_data, get_recent_applications
-from . import admin_views_export
 
 
 class CustomAdminSite(admin.AdminSite):
-    """Custom admin site with dashboard"""
+    """Custom admin site with enhanced styling"""
     site_header = "Hair Purchase Admin Panel"
     site_title = "Администрация"
     index_title = "Добро пожаловать в панель управления"
-    
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('export/applications/csv/', admin_views_export.export_applications_csv, name='export-applications-csv'),
-            path('export/applications/excel/', admin_views_export.export_applications_excel, name='export-applications-excel'),
-            path('export/prices/excel/', admin_views_export.export_prices_excel, name='export-prices-excel'),
-        ]
-        return custom_urls + urls
-    
-    def index(self, request):
-        """Custom dashboard page"""
-        from django.shortcuts import render
-        
-        stats = get_dashboard_stats()
-        chart_data = get_chart_data()
-        recent_apps = get_recent_applications(10)
-        
-        context = {
-            'stats': stats,
-            'chart_data': chart_data,
-            'recent_apps': recent_apps,
-            'site_header': self.site_header,
-            'title': 'Dashboard',
-        }
-        return render(request, 'admin/custom_dashboard.html', context)
 
 
 # Create and register custom admin site
@@ -304,7 +275,7 @@ class TelegramAdminAdmin(admin.ModelAdmin):
     permissions_display.short_description = 'Права'
 
 
-# Register with custom admin site if available, otherwise use default
+# Register with custom admin site
 try:
     custom_admin_site.register(HairApplication, HairApplicationAdmin)
     custom_admin_site.register(PriceList, PriceListAdmin)
