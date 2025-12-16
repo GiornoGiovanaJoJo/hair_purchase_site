@@ -4,7 +4,6 @@ with beautiful UI, colored badges, and improved UX
 """
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db.models import Count, Q
 from .models import HairApplication, PriceList, TelegramAdmin
 
 
@@ -30,19 +29,19 @@ class HairApplicationAdmin(admin.ModelAdmin):
     readonly_fields = ['estimated_price', 'created_at', 'updated_at', 'display_photos']
     
     fieldsets = (
-        ('🎯 Основная информация', {
+        ('Main Information', {
             'fields': ('name', 'phone', 'email', 'city', 'comment')
         }),
-        ('🎨 Характеристики волос', {
+        ('Hair Characteristics', {
             'fields': ('length', 'color', 'structure', 'age', 'condition')
         }),
-        ('📸 Фотографии', {
+        ('Photos', {
             'fields': ('photo1', 'photo2', 'photo3', 'display_photos')
         }),
-        ('💰 Стоимость и статус', {
+        ('Price and Status', {
             'fields': ('estimated_price', 'final_price', 'status', 'admin_notes')
         }),
-        ('📝 Метаданные', {
+        ('Metadata', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
@@ -62,10 +61,10 @@ class HairApplicationAdmin(admin.ModelAdmin):
             'border-radius: 12px; '
             'font-weight: bold; '
             'font-size: 12px;'
-            '">📋 #{}</span>',
+            '">ID #{}</span>',
             obj.id
         )
-    application_badge.short_description = '🎯 Заявка'
+    application_badge.short_description = 'Application'
     
     def customer_info(self, obj):
         """Show customer information."""
@@ -76,24 +75,24 @@ class HairApplicationAdmin(admin.ModelAdmin):
         return format_html(
             '<div style="line-height: 1.6; font-size: 12px;">'
             '<strong>{}</strong>{}<br/>'
-            '📞 {}<br/>'
-            '✉️ {}'
+            'Phone: {}<br/>'
+            'Email: {}'
             '</div>',
             obj.name or '—',
             city,
             phone_link,
             email_link
         )
-    customer_info.short_description = '👤 Клиент'
+    customer_info.short_description = 'Customer'
     
     def status_badge(self, obj):
         """Show status with colored badge."""
         status_map = {
-            'new': ('🟡 Новая', '#FFC107'),
-            'viewed': ('👀 Просмотрена', '#2196F3'),
-            'accepted': ('✅ Принята', '#4CAF50'),
-            'rejected': ('❌ Отклонена', '#F44336'),
-            'completed': ('🏁 Завершена', '#8BC34A'),
+            'new': ('New', '#FFC107'),
+            'viewed': ('Viewed', '#2196F3'),
+            'accepted': ('Accepted', '#4CAF50'),
+            'rejected': ('Rejected', '#F44336'),
+            'completed': ('Completed', '#8BC34A'),
         }
         
         display, color = status_map.get(obj.status, ('—', '#9E9E9E'))
@@ -110,15 +109,15 @@ class HairApplicationAdmin(admin.ModelAdmin):
             color,
             display
         )
-    status_badge.short_description = '⚡ Статус'
+    status_badge.short_description = 'Status'
     
     def hair_specs(self, obj):
         """Show hair specifications compactly."""
         return format_html(
             '<div style="line-height: 1.6; font-size: 11px;">'
-            '{} см<br/>'
-            '{} · {}<br/>'
-            '{} · {}'
+            '{} cm<br/>'
+            '{} / {}<br/>'
+            '{} / {}'
             '</div>',
             obj.length if obj.length else '—',
             obj.color if obj.color else '—',
@@ -126,7 +125,7 @@ class HairApplicationAdmin(admin.ModelAdmin):
             obj.structure if obj.structure else '—',
             f'{obj.age}' if obj.age else '—'
         )
-    hair_specs.short_description = '💇 Волосы'
+    hair_specs.short_description = 'Hair Specs'
     
     def price_badge(self, obj):
         """Show price with styling."""
@@ -139,7 +138,7 @@ class HairApplicationAdmin(admin.ModelAdmin):
                 'border-radius: 8px; '
                 'font-weight: bold; '
                 'font-size: 12px;'
-                '">₽ {:,.0f}</span>',
+                '">RUB {0:,.0f}</span>',
                 obj.final_price
             )
         elif obj.estimated_price:
@@ -151,11 +150,11 @@ class HairApplicationAdmin(admin.ModelAdmin):
                 'border-radius: 8px; '
                 'font-weight: bold; '
                 'font-size: 12px;'
-                '">~₽ {:,.0f}</span>',
+                '">~RUB {0:,.0f}</span>',
                 obj.estimated_price
             )
         return '—'
-    price_badge.short_description = '💰 Цена'
+    price_badge.short_description = 'Price'
     
     def created_date(self, obj):
         """Show creation date."""
@@ -164,7 +163,7 @@ class HairApplicationAdmin(admin.ModelAdmin):
             obj.created_at.strftime('%d.%m.%Y %H:%M:%S'),
             obj.created_at.strftime('%d.%m')
         )
-    created_date.short_description = '📅 Дата'
+    created_date.short_description = 'Date'
     
     def display_photos(self, obj):
         """Display photos in admin."""
@@ -177,25 +176,25 @@ class HairApplicationAdmin(admin.ModelAdmin):
         html += '</div>'
         return format_html(html)
     
-    display_photos.short_description = '📸 Превью фото'
+    display_photos.short_description = 'Photos'
     
     def mark_as_accepted(self, request, queryset):
         """Action: accept applications."""
         updated = queryset.filter(status='new').update(status='accepted')
-        self.message_user(request, f'✅ {updated} заявок принято')
-    mark_as_accepted.short_description = '✅ Принять выбранные'
+        self.message_user(request, f'{updated} applications accepted')
+    mark_as_accepted.short_description = 'Accept Selected'
     
     def mark_as_rejected(self, request, queryset):
         """Action: reject applications."""
         updated = queryset.filter(status='new').update(status='rejected')
-        self.message_user(request, f'❌ {updated} заявок отклонено')
-    mark_as_rejected.short_description = '❌ Отклонить выбранные'
+        self.message_user(request, f'{updated} applications rejected')
+    mark_as_rejected.short_description = 'Reject Selected'
     
     def mark_as_completed(self, request, queryset):
         """Action: mark applications as completed."""
         updated = queryset.filter(status__in=['accepted']).update(status='completed')
-        self.message_user(request, f'🏁 {updated} заявок завершено')
-    mark_as_completed.short_description = '🏁 Завершить выбранные'
+        self.message_user(request, f'{updated} applications completed')
+    mark_as_completed.short_description = 'Complete Selected'
 
 
 @admin.register(PriceList)
@@ -217,10 +216,10 @@ class PriceListAdmin(admin.ModelAdmin):
     search_fields = ['length', 'color', 'structure']
     
     fieldsets = (
-        ('📋 Параметры', {
+        ('Parameters', {
             'fields': ('length', 'color', 'structure', 'condition')
         }),
-        ('💰 Цена', {
+        ('Price', {
             'fields': ('base_price', 'is_active')
         }),
     )
@@ -237,15 +236,15 @@ class PriceListAdmin(admin.ModelAdmin):
             '">#{}</span>',
             obj.id
         )
-    price_id.short_description = '🎯 ID'
+    price_id.short_description = 'ID'
     
     def color_badge(self, obj):
         color_map = {
-            'блонд': ('👱 Блонд', '#FFD700'),
-            'светло-русые': ('🟡 Светло-русые', '#F5DEB3'),
-            'русые': ('Brown Русые', '#8D6E63'),
-            'темно-русые': ('🟤 Темно-русые', '#704214'),
-            'каштановые': ('☕ Каштановые', '#3E2723'),
+            'блонд': ('Blonde', '#FFD700'),
+            'светло-русые': ('Light Brown', '#F5DEB3'),
+            'русые': ('Brown', '#8D6E63'),
+            'темно-русые': ('Dark Brown', '#704214'),
+            'каштановые': ('Dark', '#3E2723'),
         }
         display, bg_color = color_map.get(obj.color, (obj.color, '#9E9E9E'))
         
@@ -261,19 +260,19 @@ class PriceListAdmin(admin.ModelAdmin):
             bg_color,
             display
         )
-    color_badge.short_description = '🎨 Цвет'
+    color_badge.short_description = 'Color'
     
     def length_display(self, obj):
-        return f'📏 {obj.length}'
-    length_display.short_description = '📏 Длина'
+        return f'{obj.length}'
+    length_display.short_description = 'Length'
     
     def structure_display(self, obj):
         return f'{obj.structure}'
-    structure_display.short_description = '🪡 Структура'
+    structure_display.short_description = 'Structure'
     
     def condition_display(self, obj):
         return f'{obj.condition}'
-    condition_display.short_description = '✨ Состояние'
+    condition_display.short_description = 'Condition'
     
     def price_display(self, obj):
         return format_html(
@@ -284,10 +283,10 @@ class PriceListAdmin(admin.ModelAdmin):
             'border-radius: 4px; '
             'font-weight: bold; '
             'font-size: 12px;'
-            '">₽ {:,.0f}</span>',
+            '">RUB {0:,.0f}</span>',
             obj.base_price
         )
-    price_display.short_description = '💰 Цена'
+    price_display.short_description = 'Price'
     
     def active_badge(self, obj):
         if obj.is_active:
@@ -299,7 +298,7 @@ class PriceListAdmin(admin.ModelAdmin):
                 'border-radius: 4px; '
                 'font-weight: bold; '
                 'font-size: 11px;'
-                '">✅ Активна</span>'
+                '">ACTIVE</span>'
             )
         return format_html(
             '<span style="'
@@ -309,9 +308,9 @@ class PriceListAdmin(admin.ModelAdmin):
             'border-radius: 4px; '
             'font-weight: bold; '
             'font-size: 11px;'
-            '">⭕ Отключена</span>'
+            '">INACTIVE</span>'
         )
-    active_badge.short_description = '⚡ Статус'
+    active_badge.short_description = 'Status'
 
 
 @admin.register(TelegramAdmin)
@@ -330,10 +329,10 @@ class TelegramAdminAdmin(admin.ModelAdmin):
     search_fields = ['telegram_id', 'username', 'first_name', 'last_name']
     
     fieldsets = (
-        ('👤 Информация', {
+        ('Information', {
             'fields': ('telegram_id', 'username', 'first_name', 'last_name')
         }),
-        ('⚙️ Роли и права', {
+        ('Roles and Permissions', {
             'fields': ('is_active', 'can_manage_applications', 'can_manage_prices')
         }),
     )
@@ -352,7 +351,7 @@ class TelegramAdminAdmin(admin.ModelAdmin):
             '">ID: {}</span>',
             obj.telegram_id
         )
-    user_badge.short_description = '🆔 Telegram ID'
+    user_badge.short_description = 'Telegram ID'
     
     def username_link(self, obj):
         if obj.username:
@@ -364,7 +363,7 @@ class TelegramAdminAdmin(admin.ModelAdmin):
                 obj.first_name or '—'
             )
         return obj.first_name or '—'
-    username_link.short_description = '👤 Пользователь'
+    username_link.short_description = 'User'
     
     def active_status(self, obj):
         if obj.is_active:
@@ -376,7 +375,7 @@ class TelegramAdminAdmin(admin.ModelAdmin):
                 'border-radius: 4px; '
                 'font-weight: bold; '
                 'font-size: 11px;'
-                '">🟢 Активен</span>'
+                '">ACTIVE</span>'
             )
         return format_html(
             '<span style="'
@@ -386,18 +385,18 @@ class TelegramAdminAdmin(admin.ModelAdmin):
             'border-radius: 4px; '
             'font-weight: bold; '
             'font-size: 11px;'
-            '">⚫ Неактивен</span>'
+            '">INACTIVE</span>'
         )
-    active_status.short_description = '⚡ Статус'
+    active_status.short_description = 'Status'
     
     def permissions_display(self, obj):
         perms = []
         if obj.can_manage_applications:
-            perms.append('📋 Заявки')
+            perms.append('Applications')
         if obj.can_manage_prices:
-            perms.append('💰 Цены')
+            perms.append('Prices')
         
         if perms:
             return ' | '.join(perms)
         return '—'
-    permissions_display.short_description = '🔐 Права'
+    permissions_display.short_description = 'Permissions'
