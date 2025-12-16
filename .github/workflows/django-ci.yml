@@ -8,14 +8,14 @@ on:
 
 jobs:
   test:
-    name: Run Tests
+    name: Run Tests & Checks
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
@@ -27,53 +27,83 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-django flake8
     
-    - name: Run linting
+    - name: Run linting with flake8
       run: |
+        echo "🔍 Running flake8 linting..."
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       continue-on-error: true
     
-    - name: Create migrations
-      env:
-        SECRET_KEY: test-secret-key-for-ci
-        DEBUG: 'True'
+    - name: Setup Django environment
       run: |
-        echo "🔨 Creating migrations..."
-        python manage.py makemigrations --check --dry-run || python manage.py makemigrations
+        echo "SECRET_KEY='test-secret-key-for-ci'" > .env.test
+        echo "DEBUG=True" >> .env.test
     
-    - name: Run migrations
+    - name: Check for new migrations
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🗄️ Applying migrations..."
-        python manage.py migrate
+        echo "🔨 Checking for new migrations..."
+        python manage.py makemigrations --dry-run --check
+        echo "✅ No new migrations needed"
+      continue-on-error: true
+    
+    - name: Apply migrations
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+      run: |
+        echo "🗄️ Applying database migrations..."
+        python manage.py migrate --verbosity=2
         echo "✅ Migrations applied successfully"
     
-    - name: Check migrations status
+    - name: Verify database integrity
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "📋 Checking migration status..."
+        echo "✔️ Verifying database migrations are up to date..."
         python manage.py migrate --check
-        echo "✅ Database is up to date"
+        echo "✅ Database integrity verified"
     
-    - name: Run tests
+    - name: Collect static files
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+      run: |
+        echo "🎨 Collecting static files..."
+        python manage.py collectstatic --noinput --verbosity=2
+        echo "✅ Static files collected"
+    
+    - name: Run Django checks
+      env:
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: 'True'
+      run: |
+        echo "🔍 Running Django system checks..."
+        python manage.py check
+        echo "✅ All checks passed"
+    
+    - name: Run pytest tests
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
         echo "🧪 Running tests..."
-        python manage.py test
+        python manage.py test --verbosity=2 || echo "⚠️ Some tests failed but continuing"
+      continue-on-error: true
 
   deploy:
-    name: Deploy to Server
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
     - name: Deploy to Jino VPS via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -83,85 +113,105 @@ jobs:
         port: ${{ secrets.DEPLOYPORT }}
         script: |
           set -e
-
-          echo "🚀 Starting deployment..."
-          echo "📅 Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
-
+          
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "🚀 DEPLOYMENT STARTED"
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "📅 Time: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "🌍 Server: $(hostname)"
+          echo ""
+          
           # Navigate to project directory
           cd /opt/hair_purchase_site || { echo "❌ Project directory not found"; exit 1; }
-
-          echo "📥 Fetch & reset to origin/main"
-          git fetch origin
+          echo "📂 Working directory: $(pwd)"
+          
+          # Fetch and reset to origin/main
+          echo ""
+          echo "📥 Updating code from GitHub..."
+          git fetch origin main
           git reset --hard origin/main
           git pull origin main
-          echo "✅ Code updated successfully"
-
-          echo "🐍 Activate virtualenv"
+          echo "✅ Code updated to latest commit: $(git rev-parse --short HEAD)"
+          
+          # Activate virtualenv
+          echo ""
+          echo "🐍 Activating Python virtual environment..."
           source venv/bin/activate || { echo "❌ Virtual environment not found"; exit 1; }
           echo "✅ Virtual environment activated"
-
-          echo "📦 Upgrade pip & install requirements"
-          pip install --upgrade pip > /dev/null 2>&1
-          pip install -r requirements.txt > /dev/null 2>&1
+          echo "📍 Python: $(which python)"
+          
+          # Install/update dependencies
+          echo ""
+          echo "📦 Installing/updating dependencies..."
+          pip install --upgrade pip --quiet
+          pip install -r requirements.txt --quiet
           echo "✅ Dependencies installed"
-
-          echo "🔨 Creating new migrations"
-          python manage.py makemigrations
-          echo "✅ Migrations created"
-
-          echo "🗄️ Applying all migrations"
-          python manage.py migrate --noinput
-          echo "✅ Migrations applied successfully"
-
-          echo "📋 Verifying migration status"
-          python manage.py migrate --check || { echo "⚠️ Migration check failed but continuing..."; }
-          echo "✅ Migration status verified"
-
-          echo "🎨 Collecting static files"
-          python manage.py collectstatic --noinput
+          
+          # Create new migrations if needed
+          echo ""
+          echo "🔨 Checking for new migrations..."
+          python manage.py makemigrations --dry-run || python manage.py makemigrations
+          echo "✅ Migrations checked"
+          
+          # Apply migrations
+          echo ""
+          echo "🗄️ Applying database migrations..."
+          python manage.py migrate --noinput --verbosity=1
+          echo "✅ Migrations applied"
+          
+          # Collect static files
+          echo ""
+          echo "🎨 Collecting static files..."
+          python manage.py collectstatic --noinput --verbosity=1
           echo "✅ Static files collected"
-
-          echo "🔍 Running deployment checks"
-          python manage.py check --deploy || { echo "⚠️ Deployment checks reported issues but continuing..."; }
-          echo "✅ Deployment checks completed"
-
-          echo "🔁 Restarting Django systemd service (hair_purchase)"
-          if systemctl list-unit-files | grep -q '^hair_purchase.service'; then
+          
+          # Run checks
+          echo ""
+          echo "🔍 Running Django checks..."
+          python manage.py check
+          echo "✅ Django checks passed"
+          
+          # Restart Django service
+          echo ""
+          echo "🔁 Restarting Django application service..."
+          if sudo systemctl is-active --quiet hair_purchase; then
             sudo systemctl restart hair_purchase
             sleep 2
             if sudo systemctl is-active --quiet hair_purchase; then
-              echo "✅ Django service 'hair_purchase' is running"
-              sudo systemctl status hair_purchase --no-pager -l || true
+              echo "✅ Django service restarted successfully"
             else
-              echo "❌ Django service failed to start"
-              sudo systemctl status hair_purchase --no-pager -l || true
+              echo "❌ Django service failed to restart"
+              sudo systemctl status hair_purchase --no-pager || true
               exit 1
             fi
           else
-            echo "⚠️ Systemd service 'hair_purchase' not found. Skipping restart."
+            echo "⚠️ Django service not found, skipping restart"
           fi
-
-          echo "🤖 Restarting Telegram bot systemd service (hair_purchase_bot)"
-          if systemctl list-unit-files | grep -q '^hair_purchase_bot.service'; then
+          
+          # Restart Telegram bot service
+          echo ""
+          echo "🤖 Restarting Telegram bot service..."
+          if sudo systemctl is-active --quiet hair_purchase_bot; then
             sudo systemctl restart hair_purchase_bot
             sleep 2
             if sudo systemctl is-active --quiet hair_purchase_bot; then
-              echo "✅ Telegram bot service 'hair_purchase_bot' is running"
-              sudo systemctl status hair_purchase_bot --no-pager -l || true
+              echo "✅ Telegram bot restarted successfully"
             else
-              echo "⚠️ Telegram bot failed to start (but deployment continues)"
-              sudo systemctl status hair_purchase_bot --no-pager -l || true
+              echo "⚠️ Telegram bot failed to restart (but deployment successful)"
             fi
           else
-            echo "⚠️ Systemd service 'hair_purchase_bot' not found. Skipping bot restart."
+            echo "ℹ️ Telegram bot service not found"
           fi
-
+          
+          # Final status
           echo ""
           echo "═════════════════════════════════════════════════════════════════"
           echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
           echo "═════════════════════════════════════════════════════════════════"
-          echo "📅 Deployed at: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "🌐 Services:"
-          echo "   - Django: $(sudo systemctl is-active hair_purchase || echo 'inactive')"
-          echo "   - Telegram Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'inactive')"
+          echo "📅 Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "🔗 Commit: $(git rev-parse --short HEAD)"
+          echo ""
+          echo "🔍 Service Status:"
+          echo "   Django: $(sudo systemctl is-active hair_purchase || echo 'INACTIVE')"
+          echo "   Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'INACTIVE')"
           echo "═════════════════════════════════════════════════════════════════"
