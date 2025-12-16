@@ -11,6 +11,7 @@ from drf_spectacular.views import (
     SpectacularRedocView
 )
 from hair_app import admin_views_export
+from hair_app.admin import custom_admin_site
 
 urlpatterns = [
     # Admin Export URLs
@@ -18,8 +19,8 @@ urlpatterns = [
     path('admin/export/applications/excel/', admin_views_export.export_applications_excel, name='export-applications-excel'),
     path('admin/export/prices/excel/', admin_views_export.export_prices_excel, name='export-prices-excel'),
     
-    # Django Admin
-    path('admin/', admin.site.urls),
+    # Custom Admin with Dashboard
+    path('admin/', custom_admin_site.urls),
     
     # Main app
     path('', include('hair_app.urls')),
@@ -34,8 +35,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-# Admin site customization
-admin.site.site_header = 'Hair Purchase Admin Panel'
-admin.site.site_title = 'Administration'
-admin.site.index_title = 'Dashboard & Management'
