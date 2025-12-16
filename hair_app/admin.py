@@ -44,10 +44,13 @@ class CustomAdminSite(admin.AdminSite):
 
 
 # Create and register custom admin site
-custom_admin_site = CustomAdminSite(name='custom_admin')
+try:
+    custom_admin_site = CustomAdminSite(name='custom_admin')
+except Exception as e:
+    print(f'Warning: Failed to create custom admin site: {e}')
+    custom_admin_site = admin.site
 
 
-@custom_admin_site.register(HairApplication)
 class HairApplicationAdmin(admin.ModelAdmin):
     """Admin for hair applications with beautiful styling."""
     
@@ -178,7 +181,6 @@ class HairApplicationAdmin(admin.ModelAdmin):
     mark_as_completed.short_description = 'Завершить выбранные'
 
 
-@custom_admin_site.register(PriceList)
 class PriceListAdmin(admin.ModelAdmin):
     """Admin for price list with beautiful display."""
     
@@ -248,7 +250,6 @@ class PriceListAdmin(admin.ModelAdmin):
     active_badge.short_description = 'Статус'
 
 
-@custom_admin_site.register(TelegramAdmin)
 class TelegramAdminAdmin(admin.ModelAdmin):
     """Admin for Telegram administrators."""
     
@@ -301,3 +302,15 @@ class TelegramAdminAdmin(admin.ModelAdmin):
             perms.append('Цены')
         return ' | '.join(perms) if perms else '---'
     permissions_display.short_description = 'Права'
+
+
+# Register with custom admin site if available, otherwise use default
+try:
+    custom_admin_site.register(HairApplication, HairApplicationAdmin)
+    custom_admin_site.register(PriceList, PriceListAdmin)
+    custom_admin_site.register(TelegramAdmin, TelegramAdminAdmin)
+except Exception as e:
+    print(f'Warning: Failed to register with custom admin: {e}')
+    admin.site.register(HairApplication, HairApplicationAdmin)
+    admin.site.register(PriceList, PriceListAdmin)
+    admin.site.register(TelegramAdmin, TelegramAdminAdmin)
