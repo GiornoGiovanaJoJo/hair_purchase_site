@@ -36,4 +36,4 @@ pydantic==2.10.3
 aiofiles==24.1.0
 
 # Excel Export
-openpyxl==3.10.0
+openpyxl==3.1.5
