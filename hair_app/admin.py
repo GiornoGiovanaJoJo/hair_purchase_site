@@ -54,31 +54,25 @@ class HairApplicationAdmin(admin.ModelAdmin):
     def application_badge(self, obj):
         """Show application ID with beautiful badge."""
         return format_html(
-            '<span style="'
-            'background-color: #2196F3; '
-            'color: white; '
-            'padding: 6px 12px; '
-            'border-radius: 12px; '
-            'font-weight: bold; '
-            'font-size: 12px;'
-            '">ID #{}</span>',
+            '<span style="background-color: #2196F3; color: white; '
+            'padding: 6px 12px; border-radius: 12px; font-weight: bold; '
+            'font-size: 12px;">ID #{}</span>',
             obj.id
         )
     application_badge.short_description = 'Application'
     
     def customer_info(self, obj):
         """Show customer information."""
-        phone_link = f'<a href="tel:{obj.phone}">{obj.phone}</a>' if obj.phone else '—'
-        email_link = f'<a href="mailto:{obj.email}">{obj.email}</a>' if obj.email else '—'
+        phone_link = f'<a href="tel:{obj.phone}">{obj.phone}</a>' if obj.phone else '---'
+        email_link = f'<a href="mailto:{obj.email}">{obj.email}</a>' if obj.email else '---'
         city = f' ({obj.city})' if obj.city else ''
         
         return format_html(
             '<div style="line-height: 1.6; font-size: 12px;">'
             '<strong>{}</strong>{}<br/>'
             'Phone: {}<br/>'
-            'Email: {}'
-            '</div>',
-            obj.name or '—',
+            'Email: {}</div>',
+            obj.name or '---',
             city,
             phone_link,
             email_link
@@ -95,17 +89,12 @@ class HairApplicationAdmin(admin.ModelAdmin):
             'completed': ('Completed', '#8BC34A'),
         }
         
-        display, color = status_map.get(obj.status, ('—', '#9E9E9E'))
+        display, color = status_map.get(obj.status, ('---', '#9E9E9E'))
         
         return format_html(
-            '<span style="'
-            'background-color: {}; '
-            'color: white; '
-            'padding: 6px 12px; '
-            'border-radius: 12px; '
-            'font-weight: bold; '
-            'font-size: 12px;'
-            '">{}}</span>',
+            '<span style="background-color: {}; color: white; '
+            'padding: 6px 12px; border-radius: 12px; font-weight: bold; '
+            'font-size: 12px;">{}</span>',
             color,
             display
         )
@@ -117,13 +106,12 @@ class HairApplicationAdmin(admin.ModelAdmin):
             '<div style="line-height: 1.6; font-size: 11px;">'
             '{} cm<br/>'
             '{} / {}<br/>'
-            '{} / {}'
-            '</div>',
-            obj.length if obj.length else '—',
-            obj.color if obj.color else '—',
-            obj.condition if obj.condition else '—',
-            obj.structure if obj.structure else '—',
-            f'{obj.age}' if obj.age else '—'
+            '{} / {}</div>',
+            obj.length if obj.length else '---',
+            obj.color if obj.color else '---',
+            obj.condition if obj.condition else '---',
+            obj.structure if obj.structure else '---',
+            obj.age if obj.age else '---'
         )
     hair_specs.short_description = 'Hair Specs'
     
@@ -131,29 +119,19 @@ class HairApplicationAdmin(admin.ModelAdmin):
         """Show price with styling."""
         if obj.final_price:
             return format_html(
-                '<span style="'
-                'background-color: #4CAF50; '
-                'color: white; '
-                'padding: 6px 12px; '
-                'border-radius: 8px; '
-                'font-weight: bold; '
-                'font-size: 12px;'
-                '">RUB {0:,.0f}</span>',
+                '<span style="background-color: #4CAF50; color: white; '
+                'padding: 6px 12px; border-radius: 8px; font-weight: bold; '
+                'font-size: 12px;">RUB {:,.0f}</span>',
                 obj.final_price
             )
         elif obj.estimated_price:
             return format_html(
-                '<span style="'
-                'background-color: #2196F3; '
-                'color: white; '
-                'padding: 6px 12px; '
-                'border-radius: 8px; '
-                'font-weight: bold; '
-                'font-size: 12px;'
-                '">~RUB {0:,.0f}</span>',
+                '<span style="background-color: #2196F3; color: white; '
+                'padding: 6px 12px; border-radius: 8px; font-weight: bold; '
+                'font-size: 12px;">~RUB {:,.0f}</span>',
                 obj.estimated_price
             )
-        return '—'
+        return '---'
     price_badge.short_description = 'Price'
     
     def created_date(self, obj):
@@ -226,14 +204,9 @@ class PriceListAdmin(admin.ModelAdmin):
     
     def price_id(self, obj):
         return format_html(
-            '<span style="'
-            'background-color: #E91E63; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-size: 11px; '
-            'font-weight: bold;'
-            '">#{}</span>',
+            '<span style="background-color: #E91E63; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-size: 11px; '
+            'font-weight: bold;">#{}</span>',
             obj.id
         )
     price_id.short_description = 'ID'
@@ -249,14 +222,9 @@ class PriceListAdmin(admin.ModelAdmin):
         display, bg_color = color_map.get(obj.color, (obj.color, '#9E9E9E'))
         
         return format_html(
-            '<span style="'
-            'background-color: {}; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-size: 11px; '
-            'font-weight: bold;'
-            '">{}}</span>',
+            '<span style="background-color: {}; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-size: 11px; '
+            'font-weight: bold;">{}</span>',
             bg_color,
             display
         )
@@ -276,14 +244,9 @@ class PriceListAdmin(admin.ModelAdmin):
     
     def price_display(self, obj):
         return format_html(
-            '<span style="'
-            'background-color: #4CAF50; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-weight: bold; '
-            'font-size: 12px;'
-            '">RUB {0:,.0f}</span>',
+            '<span style="background-color: #4CAF50; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+            'font-size: 12px;">RUB {:,.0f}</span>',
             obj.base_price
         )
     price_display.short_description = 'Price'
@@ -291,24 +254,14 @@ class PriceListAdmin(admin.ModelAdmin):
     def active_badge(self, obj):
         if obj.is_active:
             return format_html(
-                '<span style="'
-                'background-color: #4CAF50; '
-                'color: white; '
-                'padding: 4px 8px; '
-                'border-radius: 4px; '
-                'font-weight: bold; '
-                'font-size: 11px;'
-                '">ACTIVE</span>'
+                '<span style="background-color: #4CAF50; color: white; '
+                'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+                'font-size: 11px;">ACTIVE</span>'
             )
         return format_html(
-            '<span style="'
-            'background-color: #9E9E9E; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-weight: bold; '
-            'font-size: 11px;'
-            '">INACTIVE</span>'
+            '<span style="background-color: #9E9E9E; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+            'font-size: 11px;">INACTIVE</span>'
         )
     active_badge.short_description = 'Status'
 
@@ -341,14 +294,9 @@ class TelegramAdminAdmin(admin.ModelAdmin):
     
     def user_badge(self, obj):
         return format_html(
-            '<span style="'
-            'background-color: #00BCD4; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-weight: bold; '
-            'font-size: 11px;'
-            '">ID: {}</span>',
+            '<span style="background-color: #00BCD4; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+            'font-size: 11px;">ID: {}</span>',
             obj.telegram_id
         )
     user_badge.short_description = 'Telegram ID'
@@ -360,32 +308,22 @@ class TelegramAdminAdmin(admin.ModelAdmin):
                 '@{}</a> ({})',
                 obj.username,
                 obj.username,
-                obj.first_name or '—'
+                obj.first_name or '---'
             )
-        return obj.first_name or '—'
+        return obj.first_name or '---'
     username_link.short_description = 'User'
     
     def active_status(self, obj):
         if obj.is_active:
             return format_html(
-                '<span style="'
-                'background-color: #4CAF50; '
-                'color: white; '
-                'padding: 4px 8px; '
-                'border-radius: 4px; '
-                'font-weight: bold; '
-                'font-size: 11px;'
-                '">ACTIVE</span>'
+                '<span style="background-color: #4CAF50; color: white; '
+                'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+                'font-size: 11px;">ACTIVE</span>'
             )
         return format_html(
-            '<span style="'
-            'background-color: #9E9E9E; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-weight: bold; '
-            'font-size: 11px;'
-            '">INACTIVE</span>'
+            '<span style="background-color: #9E9E9E; color: white; '
+            'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
+            'font-size: 11px;">INACTIVE</span>'
         )
     active_status.short_description = 'Status'
     
@@ -398,5 +336,5 @@ class TelegramAdminAdmin(admin.ModelAdmin):
         
         if perms:
             return ' | '.join(perms)
-        return '—'
+        return '---'
     permissions_display.short_description = 'Permissions'
