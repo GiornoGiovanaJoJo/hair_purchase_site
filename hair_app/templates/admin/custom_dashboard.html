@@ -1,0 +1,354 @@
+{% extends 'admin/index.html' %}
+{% load static %}
+
+{% block title %}Панель управления - Hair Purchase{% endblock %}
+
+{% block extrahead %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<style>
+    :root {
+        --primary: #1a1a2e;
+        --secondary: #16213e;
+        --accent: #0f3460;
+        --success: #27ae60;
+        --danger: #e94560;
+        --warning: #f39c12;
+        --info: #3498db;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+    }
+    
+    body {
+        background-color: #f5f6fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .dashboard-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .dashboard-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--accent);
+    }
+    
+    .dashboard-header h1 {
+        color: var(--primary);
+        font-size: 32px;
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid var(--accent);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card.danger {
+        border-left-color: var(--danger);
+    }
+    
+    .stat-card.success {
+        border-left-color: var(--success);
+    }
+    
+    .stat-card.warning {
+        border-left-color: var(--warning);
+    }
+    
+    .stat-card.info {
+        border-left-color: var(--info);
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        color: var(--primary);
+    }
+    
+    .stat-subtitle {
+        font-size: 12px;
+        color: #95a5a6;
+        margin-top: 8px;
+    }
+    
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    @media (max-width: 1024px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .chart-container, .recent-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .container-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent);
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+    }
+    
+    .recent-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .recent-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #ecf0f1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .recent-item:last-child {
+        border-bottom: none;
+    }
+    
+    .recent-name {
+        font-weight: 500;
+        color: var(--primary);
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .recent-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .status-new {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-accepted {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    
+    .status-completed {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .status-rejected {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-export {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-export-csv {
+        background-color: #3498db;
+        color: white;
+    }
+    
+    .btn-export-csv:hover {
+        background-color: #2980b9;
+    }
+    
+    .btn-export-excel {
+        background-color: #27ae60;
+        color: white;
+    }
+    
+    .btn-export-excel:hover {
+        background-color: #229954;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Панель управления волосами</h1>
+    </div>
+    
+    <!-- Статистика -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Всего заявок</div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-subtitle">{{ stats.last_30_days }} за 30 дней</div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-label">Новые</div>
+            <div class="stat-value">{{ stats.new }}</div>
+            <div class="stat-subtitle">Требуют внимания</div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-label">Принято</div>
+            <div class="stat-value">{{ stats.accepted }}</div>
+            <div class="stat-subtitle">В работе</div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-label">Завершено</div>
+            <div class="stat-value">{{ stats.completed }}</div>
+            <div class="stat-subtitle">Успешно</div>
+        </div>
+        
+        <div class="stat-card danger">
+            <div class="stat-label">Отклонено</div>
+            <div class="stat-value">{{ stats.rejected }}</div>
+            <div class="stat-subtitle">Не подходит</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-label">Средняя цена</div>
+            <div class="stat-value">{{ stats.avg_price|add:0 }} RUB</div>
+            <div class="stat-subtitle">За заявку</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-label">Смета всего</div>
+            <div class="stat-value">{{ stats.total_estimated|add:0 }} RUB</div>
+            <div class="stat-subtitle">Оцененные</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-label">Выплачено</div>
+            <div class="stat-value">{{ stats.total_final|add:0 }} RUB</div>
+            <div class="stat-subtitle">Завершённые</div>
+        </div>
+    </div>
+    
+    <!-- График и Последние заявки -->
+    <div class="content-grid">
+        <div class="chart-container">
+            <div class="container-title">Динамика заявок (30 дней)</div>
+            <div class="chart-wrapper">
+                <canvas id="applicationChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="recent-container">
+            <div class="container-title">Последние заявки</div>
+            <ul class="recent-list">
+                {% for app in recent_apps %}
+                <li class="recent-item">
+                    <span class="recent-name">{{ app.name }}</span>
+                    <span class="recent-status status-{{ app.status }}">{{ app.get_status_display }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            
+            <div class="export-buttons">
+                <a href="{% url 'admin:export-applications-csv' %}" class="btn-export btn-export-csv">CSV</a>
+                <a href="{% url 'admin:export-applications-excel' %}" class="btn-export btn-export-excel">Excel</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // График заявок
+    const ctx = document.getElementById('applicationChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.labels|safe }},
+            datasets: [{
+                label: 'Заявки',
+                data: {{ chart_data.data|safe }},
+                borderColor: '#0f3460',
+                backgroundColor: 'rgba(15, 52, 96, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#0f3460',
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
