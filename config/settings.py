@@ -181,6 +181,13 @@ YANDEX_METRIKA_ID = config('YANDEX_METRIKA_ID', default='')
 # Telegram Bot Settings
 from config.telegram_settings import *
 
+# ➕ Django Admin Customization
+# Beautiful admin interface with custom title, header, and styling
+from django.contrib import admin
+admin.site.site_header = '📋 Hair Purchase | Admin Panel'
+admin.site.site_title = 'Admin Panel'
+admin.site.index_title = '🏪 Dashboard Management'
+
 # Security Settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = False
