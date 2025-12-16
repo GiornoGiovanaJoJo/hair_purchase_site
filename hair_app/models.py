@@ -92,10 +92,11 @@ class HairApplication(models.Model):
         ('completed', 'Завершена'),
     ]
     
-    # Валидатор телефона - ТЕПЕРЬ более гибкий
+    # Валидатор телефона - ✅ ИСПРАВЛЕНО: теперь более гибкий
+    # Принимает любые форматы российского номера (7-11 цифр)
     phone_validator = RegexValidator(
-        regex=r'^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$',
-        message='Введите телефон в формате +7 (999) 123-45-67',
+        regex=r'^\+?7[\s\-\(\)]*9[\d\s\-\(\)]*[\d\s\-\(\)]*$',
+        message='Введите корректный российский номер (например: +7 (911) 957-17-12 или +79119571712)',
         code='invalid_phone_format'
     )
     
@@ -161,7 +162,7 @@ class HairApplication(models.Model):
         max_length=20,
         verbose_name='Телефон',
         validators=[phone_validator],
-        help_text='Формат: +7 (999) 123-45-67'
+        help_text='Формат: +7 (999) 123-45-67 или +79991234567'
     )
     
     email = models.EmailField(
