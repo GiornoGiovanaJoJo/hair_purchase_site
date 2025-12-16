@@ -2,8 +2,6 @@
 Views for hair purchase application
 """
 import logging
-import asyncio
-from decimal import Decimal
 from django.shortcuts import render
 from django.core.mail import send_mail
 from django.conf import settings
@@ -22,6 +20,7 @@ from .serializers import (
 )
 from .utils import calculate_hair_price
 from .price_calculator import calculate_hair_price as calc_hair_price, PRICE_TABLE
+from .tasks import send_telegram_notification
 
 logger = logging.getLogger(__name__)
 
@@ -73,15 +72,15 @@ def normalize_length_for_calculator(length_input):
 
 def normalize_request_data(request):
     """
-    🔨 КРИТИЧЕСКИЙ FIX: Конвертирует данные из HTML Form (списки) в JSON-like формат (строки)
+    🖨 CRITICAL FIX: Конвертирует данные из HTML Form (списки) в JSON-like формат (строки)
     
     HTML Form отправляет:
-        'phone': ['+79265383145']  ← СПИСОК!
-        'name': ['Данил']  ← СПИСОК!
+        'phone': ['+79265383145']  ← CПИСОК!
+        'name': ['Данил']  ← CПИСОК!
     
     DRF ожидает:
-        'phone': '+79265383145'  ← СТРОКА!
-        'name': 'Данил'  ← СТРОКА!
+        'phone': '+79265383145'  ← CTPOKA!
+        'name': 'Данил'  ← CTPOKA!
     
     Эта функция ИЗВЛЕКАЕТ первый элемент из списка и УДАЛЯЕТ пустые значения.
     """
@@ -91,14 +90,14 @@ def normalize_request_data(request):
     for key, value in request.data.items():
         logger.info(f"🔧 Processing key='{key}', value_type={type(value).__name__}, value={value}")
         
-        # Если это список с одным элементом, извлекаем его
+        # Если это список с одним элементом, извлекаем его
         if isinstance(value, list):
             if len(value) == 1:
                 # Извлекаем первый элемент
                 normalized[key] = value[0]
                 logger.info(f"🔧 Converted list with 1 element: [{value[0]}] → '{value[0]}'")
             elif len(value) == 0:
-                # Пустой список → ПОМИНАЕМ (don't add to dict)
+                # Пустой список → ПОМНИНАЕМ (don't add to dict)
                 logger.info(f"🔧 Skipping empty list for key '{key}'")
                 continue
             else:
@@ -108,7 +107,7 @@ def normalize_request_data(request):
         else:
             # Не список → проверяем пусто ли
             if isinstance(value, str) and value == '':
-                # Пустая строка → ПОМИНАЕМ (don't add to dict)
+                # Пустая строка → ПОМНИНАЕМ (don't add to dict)
                 logger.info(f"🔧 Skipping empty string for key '{key}'")
                 continue
             else:
@@ -135,13 +134,13 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """
-        ✅ ПЕРЕОПрЕДЕЛЁННЫЙ create() для ПРАВИЛЬНОЙ обработки ошибок валидации.
+        ✅ ПЕРЕОПРЕДЕЛЁННЫЙ create() для ПРАВИЛЬНОЙ обработки ошибок валидации.
         Это КРИТИЧНО для возврата понятных ошибок вместо generic 400.
         """
         try:
             logger.info(f"Creating hair application with ORIGINAL data: {request.data}")
             
-            # 🔨 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки, удаляем пустые)
+            # 🖨 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки, удаляем пустые)
             normalized_data = normalize_request_data(request)
             logger.info(f"Creating hair application with NORMALIZED data: {normalized_data}")
             
@@ -228,16 +227,15 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
                 # Log error but don't fail the request
                 logger.error(f'Error sending email for application #{application.id}: {e}')
             
-            # Send Telegram notification
+            # ✅ Send Telegram notification using threading (NOT asyncio.run())
             try:
-                from telegram_bot.bot import send_new_application_notification
-                asyncio.run(send_new_application_notification(application.id))
-                logger.info(f"Telegram notification sent for application #{application.id}")
+                send_telegram_notification(application.id)
+                logger.info(f"Telegram notification queued for application #{application.id}")
             except ImportError:
                 logger.warning("Telegram bot module not found. Skipping notification.")
             except Exception as e:
                 # Log error but don't fail the request
-                logger.error(f'Error sending Telegram notification for application #{application.id}: {e}')
+                logger.error(f'Error queuing Telegram notification for application #{application.id}: {e}')
                 
         except Exception as e:
             logger.error(f'Error in perform_create: {e}', exc_info=True)
