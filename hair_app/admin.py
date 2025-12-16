@@ -113,48 +113,17 @@ class HairApplicationAdmin(admin.ModelAdmin):
     
     def hair_specs(self, obj):
         """Show hair specifications compactly."""
-        length_map = {
-            '40-60': '40-60',
-            '60-80': '60-80',
-            '80-100': '80-100',
-            '100': '100+',
-        }
-        
-        color_map = {
-            'blond': '👱 Блонд',
-            'dark': '🟤 Тёмные',
-            'brown': '☕ Каштановые',
-            'red': '🔴 Рыжие',
-        }
-        
-        condition_map = {
-            'natural': '✨ Натуральные',
-            'dyed': '🎨 Окрашенные',
-            'damaged': '⚠️ Повреждённые',
-        }
-        
-        structure_map = {
-            'slavic': '🪡 Славянка',
-            'asian': '🪡 Азиатские',
-            'mixed': '🪡 Смешанные',
-        }
-        
-        length = length_map.get(str(obj.length), str(obj.length))
-        color = color_map.get(obj.color, obj.color)
-        condition = condition_map.get(obj.condition, obj.condition)
-        structure = structure_map.get(obj.structure, obj.structure)
-        
         return format_html(
             '<div style="line-height: 1.6; font-size: 11px;">'
             '{} см<br/>'
             '{} · {}<br/>'
             '{} · {}'
             '</div>',
-            length,
-            color,
-            condition,
-            structure,
-            f'👧 {obj.get_age_display()}' if hasattr(obj, 'get_age_display') else f'👧 {obj.age}'
+            obj.length if obj.length else '—',
+            obj.color if obj.color else '—',
+            obj.condition if obj.condition else '—',
+            obj.structure if obj.structure else '—',
+            f'{obj.age}' if obj.age else '—'
         )
     hair_specs.short_description = '💇 Волосы'
     
@@ -238,31 +207,22 @@ class PriceListAdmin(admin.ModelAdmin):
         'length_display',
         'structure_display',
         'condition_display',
-        'age_badge',
         'price_display',
         'active_badge',
     ]
     
-    list_filter = ['length', 'color', 'structure', 'condition', 'age', 'is_active']
+    list_filter = ['length', 'color', 'structure', 'condition', 'is_active']
     
     search_fields = ['length', 'color', 'structure']
     
-    list_editable = ['base_price', 'is_active']
-    
     fieldsets = (
         ('📋 Параметры', {
-            'fields': ('length', 'color', 'structure', 'condition', 'age')
+            'fields': ('length', 'color', 'structure', 'condition')
         }),
         ('💰 Цена', {
             'fields': ('base_price', 'is_active')
         }),
-        ('📝 Метаданные', {
-            'fields': ('updated_at',),
-            'classes': ('collapse',)
-        }),
     )
-    
-    readonly_fields = ['updated_at']
     
     def price_id(self, obj):
         return format_html(
@@ -306,43 +266,12 @@ class PriceListAdmin(admin.ModelAdmin):
     length_display.short_description = '📏 Длина'
     
     def structure_display(self, obj):
-        structure_map = {
-            'slavic': '🪡 Славянка',
-            'asian': '🪡 Азиатские',
-            'mixed': '🪡 Смешанные',
-        }
-        return structure_map.get(obj.structure, obj.structure)
+        return f'{obj.structure}'
     structure_display.short_description = '🪡 Структура'
     
     def condition_display(self, obj):
-        condition_map = {
-            'natural': '✨ Натуральные',
-            'dyed': '🎨 Окрашенные',
-            'damaged': '⚠️ Повреждённые',
-        }
-        return condition_map.get(obj.condition, obj.condition)
+        return f'{obj.condition}'
     condition_display.short_description = '✨ Состояние'
-    
-    def age_badge(self, obj):
-        age_map = {
-            'children': ('👧 Детские', '#FF69B4'),
-            'adult': ('👩 Взрослые', '#2196F3'),
-        }
-        display, bg_color = age_map.get(obj.age, (obj.age, '#9E9E9E'))
-        
-        return format_html(
-            '<span style="'
-            'background-color: {}; '
-            'color: white; '
-            'padding: 4px 8px; '
-            'border-radius: 4px; '
-            'font-size: 11px; '
-            'font-weight: bold;'
-            '">{}}</span>',
-            bg_color,
-            display
-        )
-    age_badge.short_description = '👥 Возраст'
     
     def price_display(self, obj):
         return format_html(
@@ -392,14 +321,11 @@ class TelegramAdminAdmin(admin.ModelAdmin):
         'username_link',
         'active_status',
         'permissions_display',
-        'created_date',
     ]
     
-    list_filter = ['is_active', 'can_manage_applications', 'can_manage_prices', 'created_at']
+    list_filter = ['is_active', 'can_manage_applications', 'can_manage_prices']
     
     search_fields = ['telegram_id', 'username', 'first_name', 'last_name']
-    
-    list_editable = ['is_active']
     
     fieldsets = (
         ('👤 Информация', {
@@ -408,13 +334,9 @@ class TelegramAdminAdmin(admin.ModelAdmin):
         ('⚙️ Роли и права', {
             'fields': ('is_active', 'can_manage_applications', 'can_manage_prices')
         }),
-        ('📝 Метаданные', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
     )
     
-    readonly_fields = ['telegram_id', 'created_at', 'updated_at']
+    readonly_fields = ['telegram_id']
     
     def user_badge(self, obj):
         return format_html(
@@ -477,11 +399,3 @@ class TelegramAdminAdmin(admin.ModelAdmin):
             return ' | '.join(perms)
         return '—'
     permissions_display.short_description = '🔐 Права'
-    
-    def created_date(self, obj):
-        return format_html(
-            '<span title="{}" style="color: #666; font-size: 12px;">{}</span>',
-            obj.created_at.strftime('%d.%m.%Y %H:%M:%S'),
-            obj.created_at.strftime('%d.%m')
-        )
-    created_date.short_description = '📅 Дата'
