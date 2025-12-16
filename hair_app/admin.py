@@ -22,7 +22,7 @@ class HairApplicationAdmin(admin.ModelAdmin):
     ]
     
     list_filter = [
-        'status', 'length', 'color', 'structure', 'condition', 'age', 'created_at'
+        'status', 'length', 'color', 'structure', 'condition', 'created_at'
     ]
     
     search_fields = ['name', 'phone', 'email', 'city', 'comment', 'id']
@@ -48,7 +48,7 @@ class HairApplicationAdmin(admin.ModelAdmin):
         }),
     )
     
-    actions = ['mark_as_approved', 'mark_as_declined', 'mark_as_completed']
+    actions = ['mark_as_accepted', 'mark_as_rejected', 'mark_as_completed']
     
     ordering = ('-created_at',)
     
@@ -90,9 +90,10 @@ class HairApplicationAdmin(admin.ModelAdmin):
         """Show status with colored badge."""
         status_map = {
             'new': ('🟡 Новая', '#FFC107'),
-            'approved': ('✅ Одобрено', '#4CAF50'),
-            'declined': ('❌ Отклонено', '#F44336'),
-            'completed': ('🏁 Завершено', '#8BC34A'),
+            'viewed': ('👀 Просмотрена', '#2196F3'),
+            'accepted': ('✅ Принята', '#4CAF50'),
+            'rejected': ('❌ Отклонена', '#F44336'),
+            'completed': ('🏁 Завершена', '#8BC34A'),
         }
         
         display, color = status_map.get(obj.status, ('—', '#9E9E9E'))
@@ -178,21 +179,21 @@ class HairApplicationAdmin(admin.ModelAdmin):
     
     display_photos.short_description = '📸 Превью фото'
     
-    def mark_as_approved(self, request, queryset):
-        """Action: approve applications."""
-        updated = queryset.filter(status='new').update(status='approved')
-        self.message_user(request, f'✅ {updated} заявок одобрено')
-    mark_as_approved.short_description = '✅ Одобрить выбранные'
+    def mark_as_accepted(self, request, queryset):
+        """Action: accept applications."""
+        updated = queryset.filter(status='new').update(status='accepted')
+        self.message_user(request, f'✅ {updated} заявок принято')
+    mark_as_accepted.short_description = '✅ Принять выбранные'
     
-    def mark_as_declined(self, request, queryset):
-        """Action: decline applications."""
-        updated = queryset.filter(status='new').update(status='declined')
+    def mark_as_rejected(self, request, queryset):
+        """Action: reject applications."""
+        updated = queryset.filter(status='new').update(status='rejected')
         self.message_user(request, f'❌ {updated} заявок отклонено')
-    mark_as_declined.short_description = '❌ Отклонить выбранные'
+    mark_as_rejected.short_description = '❌ Отклонить выбранные'
     
     def mark_as_completed(self, request, queryset):
         """Action: mark applications as completed."""
-        updated = queryset.filter(status__in=['approved']).update(status='completed')
+        updated = queryset.filter(status__in=['accepted']).update(status='completed')
         self.message_user(request, f'🏁 {updated} заявок завершено')
     mark_as_completed.short_description = '🏁 Завершить выбранные'
 
@@ -240,10 +241,11 @@ class PriceListAdmin(admin.ModelAdmin):
     
     def color_badge(self, obj):
         color_map = {
-            'blond': ('👱 Блонд', '#FFD700'),
-            'dark': ('🟤 Тёмные', '#3E2723'),
-            'brown': ('☕ Каштановые', '#8D6E63'),
-            'red': ('🔴 Рыжие', '#D32F2F'),
+            'блонд': ('👱 Блонд', '#FFD700'),
+            'светло-русые': ('🟡 Светло-русые', '#F5DEB3'),
+            'русые': ('Brown Русые', '#8D6E63'),
+            'темно-русые': ('🟤 Темно-русые', '#704214'),
+            'каштановые': ('☕ Каштановые', '#3E2723'),
         }
         display, bg_color = color_map.get(obj.color, (obj.color, '#9E9E9E'))
         
@@ -262,7 +264,7 @@ class PriceListAdmin(admin.ModelAdmin):
     color_badge.short_description = '🎨 Цвет'
     
     def length_display(self, obj):
-        return f'📏 {obj.length}+ см'
+        return f'📏 {obj.length}'
     length_display.short_description = '📏 Длина'
     
     def structure_display(self, obj):
