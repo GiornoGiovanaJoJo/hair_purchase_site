@@ -10,21 +10,15 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView
 )
-from hair_app.admin_views import (
-    dashboard,
-    get_stats_api,
-    get_trend_data_api,
-    get_applications_by_status
-)
+from hair_app import admin_views_export
 
 urlpatterns = [
-    # Custom Admin Dashboard - MUST be BEFORE admin.site.urls!
-    path('admin/dashboard/', dashboard, name='admin_dashboard'),
-    path('admin/api/stats/', get_stats_api, name='admin_stats_api'),
-    path('admin/api/trend/', get_trend_data_api, name='admin_trend_api'),
-    path('admin/api/applications-by-status/', get_applications_by_status, name='admin_status_api'),
+    # Admin Export URLs
+    path('admin/export/applications/csv/', admin_views_export.export_applications_csv, name='export-applications-csv'),
+    path('admin/export/applications/excel/', admin_views_export.export_applications_excel, name='export-applications-excel'),
+    path('admin/export/prices/excel/', admin_views_export.export_prices_excel, name='export-prices-excel'),
     
-    # Django Admin - catches all /admin/* paths
+    # Django Admin
     path('admin/', admin.site.urls),
     
     # Main app
@@ -42,6 +36,6 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Admin site customization
-admin.site.site_header = 'Admin Panel - Hair Purchase'
+admin.site.site_header = 'Hair Purchase Admin Panel'
 admin.site.site_title = 'Administration'
-admin.site.index_title = 'Dashboard Management'
+admin.site.index_title = 'Dashboard & Management'
