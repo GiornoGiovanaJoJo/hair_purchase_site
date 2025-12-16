@@ -42,6 +42,6 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Admin site customization
-admin.site.site_header = '📋 Admin Panel | Hair Purchase'
+admin.site.site_header = 'Admin Panel - Hair Purchase'
 admin.site.site_title = 'Administration'
-admin.site.index_title = '🏙️ Dashboard Management'
+admin.site.index_title = 'Dashboard Management'
