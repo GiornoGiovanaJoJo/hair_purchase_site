@@ -10,10 +10,22 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView
 )
+from hair_app.admin_views import (
+    dashboard,
+    get_stats_api,
+    get_trend_data_api,
+    get_applications_by_status
+)
 
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
+    
+    # Custom Admin Dashboard
+    path('admin/dashboard/', dashboard, name='admin_dashboard'),
+    path('admin/api/stats/', get_stats_api, name='admin_stats_api'),
+    path('admin/api/trend/', get_trend_data_api, name='admin_trend_api'),
+    path('admin/api/applications-by-status/', get_applications_by_status, name='admin_status_api'),
     
     # Main app
     path('', include('hair_app.urls')),
@@ -30,6 +42,6 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # Admin site customization
-admin.site.site_header = 'Админ-панель | Скупка волос'
-admin.site.site_title = 'Администрирование'
-admin.site.index_title = 'Управление сайтом'
+admin.site.site_header = '📋 Admin Panel | Hair Purchase'
+admin.site.site_title = 'Administration'
+admin.site.index_title = '🏙️ Dashboard Management'
