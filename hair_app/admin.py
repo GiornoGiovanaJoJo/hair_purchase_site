@@ -118,18 +118,20 @@ class HairApplicationAdmin(admin.ModelAdmin):
     def price_badge(self, obj):
         """Show price with styling."""
         if obj.final_price:
+            price_text = str(int(obj.final_price))
             return format_html(
                 '<span style="background-color: #4CAF50; color: white; '
                 'padding: 6px 12px; border-radius: 8px; font-weight: bold; '
-                'font-size: 12px;">RUB {:,.0f}</span>',
-                obj.final_price
+                'font-size: 12px;">RUB {}</span>',
+                price_text
             )
         elif obj.estimated_price:
+            price_text = str(int(obj.estimated_price))
             return format_html(
                 '<span style="background-color: #2196F3; color: white; '
                 'padding: 6px 12px; border-radius: 8px; font-weight: bold; '
-                'font-size: 12px;">~RUB {:,.0f}</span>',
-                obj.estimated_price
+                'font-size: 12px;">~RUB {}</span>',
+                price_text
             )
         return '---'
     price_badge.short_description = 'Price'
@@ -243,11 +245,12 @@ class PriceListAdmin(admin.ModelAdmin):
     condition_display.short_description = 'Condition'
     
     def price_display(self, obj):
+        price_text = str(int(obj.base_price))
         return format_html(
             '<span style="background-color: #4CAF50; color: white; '
             'padding: 4px 8px; border-radius: 4px; font-weight: bold; '
-            'font-size: 12px;">RUB {:,.0f}</span>',
-            obj.base_price
+            'font-size: 12px;">RUB {}</span>',
+            price_text
         )
     price_display.short_description = 'Price'
     
