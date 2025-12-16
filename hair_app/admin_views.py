@@ -3,6 +3,8 @@
 """
 from django.db.models import Count, Sum, Q
 from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 from .models import HairApplication, PriceList
 
@@ -97,3 +99,54 @@ def get_price_stats():
         'by_color': prices.values('color').annotate(count=Count('id')),
         'by_length': prices.values('length').annotate(count=Count('id')),
     }
+
+
+# ═══════════════════════════════════════════════════════════════
+# VIEW FUNCTIONS FOR DASHBOARD API
+# ═══════════════════════════════════════════════════════════════
+
+@require_http_methods(["GET"])
+def dashboard_view(request):
+    """
+    API endpoint: GET /api/admin/dashboard/
+    Returns dashboard statistics
+    """
+    stats = get_dashboard_stats()
+    return JsonResponse(stats)
+
+
+@require_http_methods(["GET"])
+def chart_data(request):
+    """
+    API endpoint: GET /api/admin/chart/
+    Returns chart data for last 30 days
+    """
+    data = get_chart_data()
+    return JsonResponse(data)
+
+
+@require_http_methods(["GET"])
+def recent_applications_api(request):
+    """
+    API endpoint: GET /api/admin/recent/
+    Returns recent applications
+    """
+    limit = request.GET.get('limit', 10)
+    try:
+        limit = int(limit)
+    except (ValueError, TypeError):
+        limit = 10
+    
+    apps = get_recent_applications(limit=limit)
+    data = [
+        {
+            'id': app.id,
+            'name': app.full_name,
+            'phone': app.phone,
+            'status': app.status,
+            'created_at': app.created_at.isoformat() if app.created_at else None,
+            'estimated_price': app.estimated_price,
+        }
+        for app in apps
+    ]
+    return JsonResponse({'applications': data})
