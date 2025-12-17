@@ -4,14 +4,92 @@ with custom dashboard and beautiful UI
 """
 from django.contrib import admin
 from django.utils.html import format_html
+from django.shortcuts import render
+from django.db.models import Count, Q
+from datetime import timedelta
+from django.utils import timezone
 from .models import HairApplication, PriceList, TelegramAdmin
+import json
 
 
 class CustomAdminSite(admin.AdminSite):
-    """Custom admin site with enhanced styling"""
+    """Custom admin site with beautiful dashboard"""
     site_header = "Hair Purchase Admin Panel"
     site_title = "Администрация"
     index_title = "Добро пожаловать в панель управления"
+    
+    def index(self, request):
+        """Custom dashboard with statistics and charts"""
+        # Get applications
+        all_apps = HairApplication.objects.all()
+        
+        # Statistics
+        stats = {
+            'total_applications': all_apps.count(),
+            'new_count': all_apps.filter(status='new').count(),
+            'viewed_count': all_apps.filter(status='viewed').count(),
+            'accepted_count': all_apps.filter(status='accepted').count(),
+            'rejected_count': all_apps.filter(status='rejected').count(),
+            'completed_count': all_apps.filter(status='completed').count(),
+            'pending_count': all_apps.filter(status__in=['new', 'viewed']).count(),
+        }
+        
+        # Chart data for status distribution
+        status_data = {
+            'new_count': stats['new_count'],
+            'viewed_count': stats['viewed_count'],
+            'accepted_count': stats['accepted_count'],
+            'rejected_count': stats['rejected_count'],
+            'completed_count': stats['completed_count'],
+        }
+        
+        # Color distribution
+        color_dist = all_apps.values('color').annotate(count=Count('id')).order_by('-count')
+        color_labels = [item['color'] or 'Unknown' for item in color_dist]
+        color_counts = [item['count'] for item in color_dist]
+        
+        # Length distribution
+        length_dist = all_apps.values('length').annotate(count=Count('id')).order_by('length')
+        length_labels = [item['length'] or 'Unknown' for item in length_dist]
+        length_counts = [item['count'] for item in length_dist]
+        
+        # Timeline data (last 7 days)
+        timeline_labels = []
+        timeline_counts = []
+        for i in range(6, -1, -1):
+            date = timezone.now().date() - timedelta(days=i)
+            count = all_apps.filter(
+                created_at__date=date
+            ).count()
+            timeline_labels.append(date.strftime('%d.%m'))
+            timeline_counts.append(count)
+        
+        chart_data = {
+            'new_count': status_data['new_count'],
+            'viewed_count': status_data['viewed_count'],
+            'accepted_count': status_data['accepted_count'],
+            'rejected_count': status_data['rejected_count'],
+            'completed_count': status_data['completed_count'],
+            'color_labels': json.dumps(color_labels),
+            'color_counts': json.dumps(color_counts),
+            'length_labels': json.dumps(length_labels),
+            'length_counts': json.dumps(length_counts),
+            'timeline_labels': json.dumps(timeline_labels),
+            'timeline_counts': json.dumps(timeline_counts),
+        }
+        
+        # Recent applications
+        recent_apps = all_apps.order_by('-created_at')[:10]
+        
+        context = {
+            'stats': stats,
+            'chart_data': chart_data,
+            'recent_apps': recent_apps,
+            'site_header': self.site_header,
+            'title': 'Dashboard',
+        }
+        
+        return render(request, 'admin/custom_dashboard.html', context)
 
 
 # Create and register custom admin site
