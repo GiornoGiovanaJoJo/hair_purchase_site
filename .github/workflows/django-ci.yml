@@ -117,58 +117,39 @@ jobs:
           #!/bin/bash
           set -e
           
-          echo "="*70
+          echo "========================================"
           echo "DEPLOYMENT STARTED"
-          echo "="*70
+          echo "========================================"
           echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
           echo "Server: $(hostname)"
-          echo ""
           
           # Navigate to project directory
-          cd /opt/hair_purchase_site || { echo "ERROR: Project directory not found"; exit 1; }
+          cd /opt/hair_purchase_site || exit 1
           echo "Working directory: $(pwd)"
           
-          # Setup Git credentials
-          echo ""
-          echo "Configuring Git credentials..."
+          # Configure git
           git config --global user.email "deploy@hair-purchase.ru"
           git config --global user.name "GitHub Actions"
           
-          # Use deploy key (SSH) if available, otherwise use HTTPS
-          if [ -z "$GIT_TOKEN" ]; then
-            echo "Using SSH key for authentication"
-            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i /root/.ssh/github_key"
-          else
-            echo "Using GitHub token for authentication"
-            git config --global credential.helper store
-            echo "https://github:$GIT_TOKEN@github.com" > ~/.git-credentials
-            chmod 600 ~/.git-credentials
-          fi
-          
-          # Fetch and reset to origin/main
+          # Update code from GitHub
           echo ""
           echo "Updating code from GitHub..."
-          git fetch origin main --verbose || { echo "ERROR: Failed to fetch"; exit 1; }
+          git fetch origin main
           git reset --hard origin/main
-          git pull origin main || { echo "ERROR: Failed to pull"; exit 1; }
+          git pull origin main
           echo "SUCCESS: Code updated to $(git rev-parse --short HEAD)"
           
           # Activate virtualenv
           echo ""
           echo "Activating Python virtual environment..."
-          if [ ! -f venv/bin/activate ]; then
-            echo "ERROR: Virtual environment not found"
-            exit 1
-          fi
           source venv/bin/activate
           echo "SUCCESS: Virtual environment activated"
-          echo "Python: $(which python)"
           
           # Install/update dependencies
           echo ""
-          echo "Installing/updating dependencies..."
-          pip install --upgrade pip --quiet --disable-pip-version-check
-          pip install -r requirements.txt --quiet --disable-pip-version-check
+          echo "Installing dependencies..."
+          pip install --upgrade pip --quiet
+          pip install -r requirements.txt --quiet
           echo "SUCCESS: Dependencies installed"
           
           # Create new migrations if needed
@@ -197,19 +178,18 @@ jobs:
           
           # Restart Django service
           echo ""
-          echo "Restarting Django application service..."
+          echo "Restarting Django service..."
           if sudo systemctl is-active --quiet hair_purchase; then
             sudo systemctl restart hair_purchase
             sleep 2
             if sudo systemctl is-active --quiet hair_purchase; then
               echo "SUCCESS: Django service restarted"
             else
-              echo "ERROR: Django service failed to restart"
-              sudo systemctl status hair_purchase --no-pager || true
+              echo "ERROR: Django service failed"
               exit 1
             fi
           else
-            echo "WARNING: Django service not found, skipping restart"
+            echo "WARNING: Django service not found"
           fi
           
           # Restart Telegram bot service
@@ -221,7 +201,7 @@ jobs:
             if sudo systemctl is-active --quiet hair_purchase_bot; then
               echo "SUCCESS: Telegram bot restarted"
             else
-              echo "WARNING: Telegram bot failed to restart (but deployment successful)"
+              echo "WARNING: Telegram bot failed to restart"
             fi
           else
             echo "INFO: Telegram bot service not found"
@@ -229,15 +209,9 @@ jobs:
           
           # Final status
           echo ""
-          echo "="*70
+          echo "========================================"
           echo "DEPLOYMENT COMPLETED SUCCESSFULLY"
-          echo "="*70
+          echo "========================================"
           echo "Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
           echo "Commit: $(git rev-parse --short HEAD)"
-          echo ""
-          echo "Service Status:"
-          echo "  Django: $(sudo systemctl is-active hair_purchase || echo 'INACTIVE')"
-          echo "  Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'INACTIVE')"
-          echo "="*70
-        env:
-          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "========================================"
