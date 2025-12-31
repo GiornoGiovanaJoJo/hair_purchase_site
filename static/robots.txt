@@ -1,0 +1,55 @@
+# Hair Purchase Site - robots.txt
+# Generated: 2025-12-31
+# For search engine crawlers
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/schema/
+Allow: /api/docs/
+Allow: /static/
+Allow: /media/
+
+# Crawl delay (polite request to crawlers)
+Crawl-delay: 1
+
+# Request rate (1 request per 10 seconds)
+Request-rate: 1/10s
+
+# Sitemap location
+Sitemap: https://4895c9d9450e.vps.myjino.ru/sitemap.xml
+
+# ====================================== #
+# Rules for specific search engines
+# ====================================== #
+
+# Yandex
+User-agent: Yandex
+Allow: /
+Crawl-delay: 1
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# ====================================== #
+# Block bad/spammy bots
+# ====================================== #
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
