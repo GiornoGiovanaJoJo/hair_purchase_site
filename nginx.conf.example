@@ -1,0 +1,194 @@
+# Nginx configuration for Hair Purchase Site
+# Location: /etc/nginx/sites-available/hair-purchase
+# Enable: ln -s /etc/nginx/sites-available/hair-purchase /etc/nginx/sites-enabled/
+# Test: nginx -t
+# Reload: systemctl reload nginx
+
+upstream django_app {
+    # Change to your Django app server address
+    server 127.0.0.1:8000;
+}
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name 4895c9d9450e.vps.myjino.ru www.4895c9d9450e.vps.myjino.ru;
+    
+    return 301 https://$server_name$request_uri;
+}
+
+# Main HTTPS server block
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name 4895c9d9450e.vps.myjino.ru www.4895c9d9450e.vps.myjino.ru;
+    
+    # SSL certificates (use Let's Encrypt)
+    ssl_certificate /etc/letsencrypt/live/4895c9d9450e.vps.myjino.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/4895c9d9450e.vps.myjino.ru/privkey.pem;
+    
+    # SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/letsencrypt/live/4895c9d9450e.vps.myjino.ru/chain.pem;
+    
+    # Security headers for SEO
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml text/javascript 
+               application/json application/javascript application/xml+rss 
+               application/atom+xml image/svg+xml;
+    gzip_disable "msie6";
+    
+    # Client body size
+    client_max_body_size 20M;
+    
+    # Root and index
+    root /var/www/hair_purchase;
+    index index.html;
+    
+    # Logging
+    access_log /var/log/nginx/hair-purchase-access.log;
+    error_log /var/log/nginx/hair-purchase-error.log;
+    
+    # ====================================== #
+    # STATIC FILES CACHING
+    # ====================================== #
+    
+    # CSS and JavaScript - 30 days
+    location ~* \.(css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff";
+    }
+    
+    # Images - 60 days
+    location ~* \.(jpg|jpeg|png|gif|ico|svg|webp)$ {
+        expires 60d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # Fonts - 1 year
+    location ~* \.(woff|woff2|ttf|otf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # ====================================== #
+    # SEO FILES
+    # ====================================== #
+    
+    # robots.txt
+    location = /robots.txt {
+        alias /var/www/hair_purchase/static/robots.txt;
+        add_header Cache-Control "public, max-age=86400";
+    }
+    
+    # sitemap.xml
+    location = /sitemap.xml {
+        alias /var/www/hair_purchase/static/sitemap.xml;
+        add_header Cache-Control "public, max-age=86400";
+        add_header Content-Type "application/xml";
+    }
+    
+    # ====================================== #
+    # STATIC FILES
+    # ====================================== #
+    
+    location /static/ {
+        alias /var/www/hair_purchase/static/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    location /media/ {
+        alias /var/www/hair_purchase/media/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # ====================================== #
+    # DJANGO APPLICATION
+    # ====================================== #
+    
+    # Health check endpoint
+    location /health/ {
+        access_log off;
+        proxy_pass http://django_app;
+    }
+    
+    # Main application
+    location / {
+        # Cache HTML pages
+        add_header Cache-Control "public, max-age=3600";
+        
+        # Proxy headers
+        proxy_pass http://django_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Buffering
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+    }
+    
+    # ====================================== #
+    # ERROR PAGES
+    # ====================================== #
+    
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    
+    # ====================================== #
+    # DENY DIRECT ACCESS TO SENSITIVE FILES
+    # ====================================== #
+    
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    location ~ ~$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
+
+# Rate limiting
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=form_limit:10m rate=5r/m;
+
+# IP whitelist for admin panel
+geo $admin_access {
+    default 0;
+    # Add your office IP
+    # 123.45.67.89 1;
+}
