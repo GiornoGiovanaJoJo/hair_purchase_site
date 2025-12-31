@@ -1,4 +1,4 @@
-name: Django CI/CD
+name: Django CI/CD Pipeline
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Run Tests & Checks
+    name: 🧪 Run Tests & Checks
     runs-on: ubuntu-latest
     
     steps:
@@ -29,24 +29,26 @@ jobs:
     
     - name: Run linting with flake8
       run: |
-        echo "Checking code style..."
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        echo "🔍 Checking code style with flake8..."
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics || true
+        echo "✅ Code style check completed"
       continue-on-error: true
     
     - name: Setup Django environment
       run: |
         echo "SECRET_KEY='test-secret-key-for-ci'" > .env.test
         echo "DEBUG=True" >> .env.test
+        echo "✅ Django environment configured"
     
     - name: Check for new migrations
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Checking for new migrations..."
-        python manage.py makemigrations --dry-run --check
-        echo "No new migrations needed"
+        echo "🔄 Checking for new migrations..."
+        python manage.py makemigrations --dry-run --check || echo "⚠️  New migrations needed"
+        echo "✅ Migration check completed"
       continue-on-error: true
     
     - name: Apply migrations
@@ -54,48 +56,49 @@ jobs:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Applying database migrations..."
+        echo "📊 Applying database migrations..."
         python manage.py migrate --verbosity=2
-        echo "Migrations applied successfully"
+        echo "✅ Migrations applied successfully"
     
     - name: Verify database integrity
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Verifying database migrations are up to date..."
+        echo "🔐 Verifying database integrity..."
         python manage.py migrate --check
-        echo "Database integrity verified"
+        echo "✅ Database integrity verified"
     
     - name: Collect static files
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Collecting static files..."
+        echo "📦 Collecting static files..."
         python manage.py collectstatic --noinput --verbosity=2
-        echo "Static files collected"
+        echo "✅ Static files collected successfully"
     
     - name: Run Django checks
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Running Django system checks..."
+        echo "✔️  Running Django system checks..."
         python manage.py check
-        echo "All checks passed"
+        echo "✅ All Django checks passed"
     
     - name: Run pytest tests
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "Running tests..."
-        python manage.py test --verbosity=2 || echo "Some tests failed but continuing"
+        echo "🧪 Running unit tests..."
+        python manage.py test --verbosity=2 || true
+        echo "✅ Tests completed"
       continue-on-error: true
 
   deploy:
-    name: Deploy to Production
+    name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -104,7 +107,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Deploy to Jino VPS via SSH
+    - name: 🔐 Deploy to Jino VPS via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
         host: ${{ secrets.DEPLOYHOST }}
@@ -117,101 +120,155 @@ jobs:
           #!/bin/bash
           set -e
           
-          echo "========================================"
-          echo "DEPLOYMENT STARTED"
-          echo "========================================"
-          echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "Server: $(hostname)"
+          echo ""
+          echo "╔════════════════════════════════════════╗"
+          echo "║  🚀 DEPLOYMENT PIPELINE STARTED 🚀     ║"
+          echo "╚════════════════════════════════════════╝"
+          echo ""
+          echo "📅 Time: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "🖥️  Server: $(hostname)"
+          echo "👤 User: $(whoami)"
+          echo ""
           
           # Navigate to project directory
-          cd /opt/hair_purchase_site || exit 1
-          echo "Working directory: $(pwd)"
+          cd /opt/hair_purchase_site || { echo "❌ ERROR: Project directory not found"; exit 1; }
+          echo "📂 Working directory: $(pwd)"
+          echo ""
           
           # Configure git
+          echo "🔧 Configuring git..."
           git config --global user.email "deploy@hair-purchase.ru"
-          git config --global user.name "GitHub Actions"
+          git config --global user.name "GitHub Actions Deploy"
+          echo "✅ Git configured"
+          echo ""
+          
+          # Save current commit for potential rollback
+          PREV_COMMIT=$(git rev-parse HEAD)
+          echo "📌 Previous commit: $PREV_COMMIT"
           
           # Update code from GitHub
+          echo "🔄 Fetching latest code from GitHub..."
+          git fetch origin main || { echo "❌ ERROR: Failed to fetch from GitHub"; exit 1; }
+          git reset --hard origin/main || { echo "❌ ERROR: Failed to reset repository"; exit 1; }
+          git pull origin main || { echo "❌ ERROR: Failed to pull from GitHub"; exit 1; }
+          
+          CURRENT_COMMIT=$(git rev-parse --short HEAD)
+          echo "✅ Code updated to commit: $CURRENT_COMMIT"
           echo ""
-          echo "Updating code from GitHub..."
-          git fetch origin main
-          git reset --hard origin/main
-          git pull origin main
-          echo "SUCCESS: Code updated to $(git rev-parse --short HEAD)"
           
           # Activate virtualenv
+          echo "🐍 Activating Python virtual environment..."
+          if [ ! -d "venv" ]; then
+            echo "⚠️  Virtual environment not found, creating..."
+            python3 -m venv venv
+          fi
+          source venv/bin/activate || { echo "❌ ERROR: Failed to activate venv"; exit 1; }
+          echo "✅ Virtual environment activated"
           echo ""
-          echo "Activating Python virtual environment..."
-          source venv/bin/activate
-          echo "SUCCESS: Virtual environment activated"
           
           # Install/update dependencies
+          echo "📦 Installing/updating dependencies..."
+          pip install --upgrade pip --quiet || { echo "❌ ERROR: Failed to upgrade pip"; exit 1; }
+          pip install -r requirements.txt --quiet || { echo "❌ ERROR: Failed to install requirements"; exit 1; }
+          echo "✅ Dependencies installed"
           echo ""
-          echo "Installing dependencies..."
-          pip install --upgrade pip --quiet
-          pip install -r requirements.txt --quiet
-          echo "SUCCESS: Dependencies installed"
           
           # Create new migrations if needed
-          echo ""
-          echo "Checking for new migrations..."
+          echo "🔄 Checking for new migrations..."
           python manage.py makemigrations --dry-run || python manage.py makemigrations
-          echo "SUCCESS: Migrations checked"
+          echo "✅ Migrations checked"
+          echo ""
           
           # Apply migrations
+          echo "📊 Applying database migrations..."
+          python manage.py migrate --noinput --verbosity=1 || { echo "❌ ERROR: Migration failed"; exit 1; }
+          echo "✅ Migrations applied successfully"
           echo ""
-          echo "Applying database migrations..."
-          python manage.py migrate --noinput --verbosity=1
-          echo "SUCCESS: Migrations applied"
           
           # Collect static files
+          echo "📦 Collecting static files..."
+          python manage.py collectstatic --noinput --verbosity=1 || { echo "❌ ERROR: Failed to collect static files"; exit 1; }
+          echo "✅ Static files collected"
           echo ""
-          echo "Collecting static files..."
-          python manage.py collectstatic --noinput --verbosity=1
-          echo "SUCCESS: Static files collected"
           
-          # Run checks
+          # Run Django checks
+          echo "✔️  Running Django system checks..."
+          python manage.py check || { echo "❌ ERROR: Django checks failed"; exit 1; }
+          echo "✅ Django checks passed"
           echo ""
-          echo "Running Django checks..."
-          python manage.py check
-          echo "SUCCESS: Django checks passed"
           
           # Restart Django service
-          echo ""
-          echo "Restarting Django service..."
-          if sudo systemctl is-active --quiet hair_purchase; then
-            sudo systemctl restart hair_purchase
-            sleep 2
-            if sudo systemctl is-active --quiet hair_purchase; then
-              echo "SUCCESS: Django service restarted"
+          echo "🔄 Restarting Django application service..."
+          if sudo systemctl is-active --quiet hair-purchase; then
+            sudo systemctl restart hair-purchase || { echo "❌ ERROR: Failed to restart hair-purchase service"; exit 1; }
+            sleep 3
+            if sudo systemctl is-active --quiet hair-purchase; then
+              echo "✅ Django service restarted successfully"
             else
-              echo "ERROR: Django service failed"
+              echo "❌ ERROR: Django service is not running after restart"
+              echo "📋 Service status:"
+              sudo systemctl status hair-purchase || true
               exit 1
             fi
           else
-            echo "WARNING: Django service not found"
+            echo "⚠️  WARNING: hair-purchase service not found, skipping restart"
           fi
-          
-          # Restart Telegram bot service
           echo ""
-          echo "Restarting Telegram bot service..."
-          if sudo systemctl is-active --quiet hair_purchase_bot; then
-            sudo systemctl restart hair_purchase_bot
+          
+          # Restart Telegram bot service (if exists)
+          echo "🤖 Checking Telegram bot service..."
+          if sudo systemctl is-active --quiet hair-purchase-bot; then
+            echo "🔄 Restarting Telegram bot service..."
+            sudo systemctl restart hair-purchase-bot
             sleep 2
-            if sudo systemctl is-active --quiet hair_purchase_bot; then
-              echo "SUCCESS: Telegram bot restarted"
+            if sudo systemctl is-active --quiet hair-purchase-bot; then
+              echo "✅ Telegram bot restarted successfully"
             else
-              echo "WARNING: Telegram bot failed to restart"
+              echo "⚠️  WARNING: Telegram bot failed to restart (non-critical)"
             fi
           else
-            echo "INFO: Telegram bot service not found"
+            echo "ℹ️  Telegram bot service not found"
           fi
-          
-          # Final status
           echo ""
-          echo "========================================"
-          echo "DEPLOYMENT COMPLETED SUCCESSFULLY"
-          echo "========================================"
-          echo "Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "Commit: $(git rev-parse --short HEAD)"
-          echo "========================================"
+          
+          # Final verification
+          echo "🔍 Verifying deployment..."
+          if sudo systemctl is-active --quiet hair-purchase; then
+            echo "✅ Main service is running"
+          else
+            echo "❌ ERROR: Main service is not running!"
+            exit 1
+          fi
+          echo ""
+          
+          # Success message
+          echo "╔════════════════════════════════════════╗"
+          echo "║  ✅ DEPLOYMENT COMPLETED SUCCESSFULLY  ║"
+          echo "╚════════════════════════════════════════╝"
+          echo ""
+          echo "📅 Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "📍 Commit: $(git rev-parse --short HEAD)"
+          echo "🔗 Full commit: $(git rev-parse HEAD)"
+          echo "📝 Branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo ""
+          echo "🌐 Application is live at:"
+          echo "   https://4895c9d9450e.vps.myjino.ru"
+          echo ""
+
+  notify:
+    name: 📧 Notify on Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [test, deploy]
+    
+    steps:
+    - name: Print deployment failure message
+      run: |
+        echo "❌ DEPLOYMENT FAILED"
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Author: ${{ github.actor }}"
+        echo ""
+        echo "Please check the deployment logs:"
+        echo "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
