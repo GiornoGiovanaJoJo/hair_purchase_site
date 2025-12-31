@@ -1,0 +1,127 @@
+# Hair Purchase Site - Apache Configuration for SEO
+# Last Updated: 2025-12-31
+
+# ====================================== #
+# SECURITY & HEADERS
+# ====================================== #
+
+# Enable HTTPS redirect
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+end</IfModule>
+
+# Add security headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Permissions Policy (Feature Policy)
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ====================================== #
+# GZIP COMPRESSION
+# ====================================== #
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain
+    AddOutputFilterByType DEFLATE text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/xml application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE font/opentype
+</IfModule>
+
+# ====================================== #
+# BROWSER CACHING
+# ====================================== #
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # HTML - 1 hour
+    ExpiresByType text/html "access plus 1 hour"
+    
+    # CSS & JavaScript - 30 days
+    ExpiresByType text/css "access plus 30 days"
+    ExpiresByType application/javascript "access plus 30 days"
+    ExpiresByType text/javascript "access plus 30 days"
+    
+    # Images - 60 days
+    ExpiresByType image/jpeg "access plus 60 days"
+    ExpiresByType image/png "access plus 60 days"
+    ExpiresByType image/gif "access plus 60 days"
+    ExpiresByType image/webp "access plus 60 days"
+    ExpiresByType image/svg+xml "access plus 60 days"
+    
+    # Fonts - 1 year
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/otf "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    
+    # Default
+    ExpiresDefault "access plus 2 days"
+end</IfModule>
+
+# ====================================== #
+# URL REWRITING & SEO
+# ====================================== #
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Remove www prefix (optional)
+    # RewriteCond %{HTTP_HOST} ^www\.(.+) [NC]
+    # RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+    
+    # Remove trailing slashes
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [R=301,L]
+    
+    # Deny access to hidden files and directories
+    RewriteRule "^\.|^\.|/\." - [F]
+    
+    # robots.txt and sitemap.xml handling
+    RewriteRule ^robots.txt$ /static/robots.txt [L]
+    RewriteRule ^sitemap.xml$ /static/sitemap.xml [L]
+    RewriteRule ^sitemap_(.+)\.xml$ /static/sitemap_$1.xml [L]
+end</IfModule>
+
+# ====================================== #
+# STATIC FILE SERVING
+# ====================================== #
+
+# Serve static files directly
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|otf)$">
+    <IfModule mod_headers.c>
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </IfModule>
+</FilesMatch>
+
+# ====================================== #
+# DENY DIRECT ACCESS
+# ====================================== #
+
+# Block access to specific files and directories
+<FilesMatch "\.py$|.env$|config\.py$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<DirectoryMatch "^\/.*\/(\.)">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
