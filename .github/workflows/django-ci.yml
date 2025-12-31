@@ -111,6 +111,7 @@ jobs:
         username: ${{ secrets.DEPLOYUSER }}
         key: ${{ secrets.DEPLOYSSHKEY }}
         port: ${{ secrets.DEPLOYPORT }}
+        timeout: 60s
         script: |
           set -e
           
@@ -125,10 +126,24 @@ jobs:
           cd /opt/hair_purchase_site || { echo "❌ Project directory not found"; exit 1; }
           echo "📂 Working directory: $(pwd)"
           
+          # Configure git to use HTTPS with token (if available)
+          echo ""
+          echo "🔐 Configuring Git credentials..."
+          if [ -n "$GIT_TOKEN" ]; then
+            git config --global credential.helper store
+            echo "https://$GIT_USER:$GIT_TOKEN@github.com" > ~/.git-credentials
+            chmod 600 ~/.git-credentials
+            echo "✅ Git credentials configured"
+          else
+            echo "ℹ️ No GIT_TOKEN provided, using SSH key"
+          fi
+          
           # Fetch and reset to origin/main
           echo ""
           echo "📥 Updating code from GitHub..."
-          git fetch origin main
+          git config --global user.email "deploy@hair-purchase.ru"
+          git config --global user.name "GitHub Actions"
+          git fetch origin main --verbose
           git reset --hard origin/main
           git pull origin main
           echo "✅ Code updated to latest commit: $(git rev-parse --short HEAD)"
@@ -215,3 +230,6 @@ jobs:
           echo "   Django: $(sudo systemctl is-active hair_purchase || echo 'INACTIVE')"
           echo "   Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'INACTIVE')"
           echo "═════════════════════════════════════════════════════════════════"
+        env:
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_USER: ${{ github.actor }}
