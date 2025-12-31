@@ -1,63 +1,80 @@
-# 🚀 GitHub Actions Deployment Test
+# 🚀 GitHub Actions Deployment Test - Attempt 2
 
-**Date:** 2025-12-31 19:22 MSK
-**Status:** ✅ **DEPLOYMENT PIPELINE INITIALIZED**
-
----
-
-## ✅ Setup Completed
-
-- [x] SSH Key Generated on Server
-- [x] GitHub Secrets Configured (4/4)
-  - DEPLOYHOST
-  - DEPLOYUSER
-  - DEPLOYPORT
-  - DEPLOYSSHKEY
-- [x] GitHub Actions Workflow Updated
-- [x] Documentation Created
+**Date:** 2025-12-31 19:57 MSK
+**Status:** ✅ **SSH KEY UPDATED - RETRYING DEPLOYMENT**
 
 ---
 
-## 🎯 Next Steps
+## ✅ Changes Made
 
-1. **Watch GitHub Actions:** https://github.com/GiornoGiovanaJoJo/hair_purchase_site/actions
-2. **Check Deployment Status:** Look for the latest workflow run
-3. **Monitor Server:** Check logs on VPS if needed
+- [x] SSH Key Regenerated on Server
+- [x] SSH Key Secret Updated in GitHub
+- [x] Retrying Deployment Pipeline
 
 ---
 
-## 📊 Workflow Pipeline
+## 📊 Deployment Status
+
+**Previous Attempt:** Failed (SSH Auth Issue)
+**Current Attempt:** In Progress...
+
+---
+
+## 🔄 Workflow Pipeline
 
 ```
-┌─────────────────┐
-│  Push to Main   │
-└────────┬────────┘
-         │
-         ▼
-┌──────────────────────┐
-│  🧪 Tests & Checks   │
-│  - Lint Code         │
-│  - Run Tests         │
-│  - Check Django      │
-└────────┬─────────────┘
-         │
-         ▼
-┌──────────────────────┐
-│  🚀 Deploy           │
-│  - Update Code       │
-│  - Run Migrations    │
-│  - Collect Static    │
-│  - Restart Services  │
-└────────┬─────────────┘
-         │
-         ▼
-┌──────────────────────┐
-│  ✅ Success/Notify   │
-└──────────────────────┘
+┌──────────────────────────────────────┐
+│  Push to Main (SSH Key Updated)      │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────┐
+│  🧪 Tests & Checks                    │
+│  - Lint Code                                     │
+│  - Run Tests                                     │
+│  - Check Django                                  │
+└──────────────────┬───────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────┐
+│  🚀 Deploy (With New SSH Key)         │
+│  - Update Code                                   │
+│  - Run Migrations                                │
+│  - Collect Static                                │
+│  - Restart Services                              │
+└──────────────────┬───────────────────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────────────────┐
+│  ✅ Success or 📧 Notify on Failure  │
+└──────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🎉 Ready for Production!
+## ⏱️ Expected Duration
 
-CI/CD Pipeline is now fully operational. All future pushes to `main` will trigger automatic deployment.
+- Tests: 2-3 minutes
+- Deploy: 3-5 minutes
+- **Total: ~5-7 minutes**
+
+---
+
+## 📍 Monitor Here
+
+👀 Watch the deployment: https://github.com/GiornoGiovanaJoJo/hair_purchase_site/actions
+
+---
+
+## 🎯 Success Indicators
+
+✅ All tests pass  
+✅ SSH connection established  
+✅ Code updated on server  
+✅ Migrations applied  
+✅ Services restarted  
+✅ Green checkmark on all jobs  
+
+---
+
+**Let's deploy! 🚀**
