@@ -29,7 +29,7 @@ jobs:
     
     - name: Run linting with flake8
       run: |
-        echo "🔍 Running flake8 linting..."
+        echo "Checking code style..."
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       continue-on-error: true
@@ -44,9 +44,9 @@ jobs:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🔨 Checking for new migrations..."
+        echo "Checking for new migrations..."
         python manage.py makemigrations --dry-run --check
-        echo "✅ No new migrations needed"
+        echo "No new migrations needed"
       continue-on-error: true
     
     - name: Apply migrations
@@ -54,44 +54,44 @@ jobs:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🗄️ Applying database migrations..."
+        echo "Applying database migrations..."
         python manage.py migrate --verbosity=2
-        echo "✅ Migrations applied successfully"
+        echo "Migrations applied successfully"
     
     - name: Verify database integrity
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "✔️ Verifying database migrations are up to date..."
+        echo "Verifying database migrations are up to date..."
         python manage.py migrate --check
-        echo "✅ Database integrity verified"
+        echo "Database integrity verified"
     
     - name: Collect static files
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🎨 Collecting static files..."
+        echo "Collecting static files..."
         python manage.py collectstatic --noinput --verbosity=2
-        echo "✅ Static files collected"
+        echo "Static files collected"
     
     - name: Run Django checks
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🔍 Running Django system checks..."
+        echo "Running Django system checks..."
         python manage.py check
-        echo "✅ All checks passed"
+        echo "All checks passed"
     
     - name: Run pytest tests
       env:
         SECRET_KEY: test-secret-key-for-ci
         DEBUG: 'True'
       run: |
-        echo "🧪 Running tests..."
-        python manage.py test --verbosity=2 || echo "⚠️ Some tests failed but continuing"
+        echo "Running tests..."
+        python manage.py test --verbosity=2 || echo "Some tests failed but continuing"
       continue-on-error: true
 
   deploy:
@@ -111,125 +111,133 @@ jobs:
         username: ${{ secrets.DEPLOYUSER }}
         key: ${{ secrets.DEPLOYSSHKEY }}
         port: ${{ secrets.DEPLOYPORT }}
-        timeout: 60s
+        timeout: 120s
+        command_timeout: 60m
         script: |
+          #!/bin/bash
           set -e
           
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "🚀 DEPLOYMENT STARTED"
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "📅 Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "🌍 Server: $(hostname)"
+          echo "="*70
+          echo "DEPLOYMENT STARTED"
+          echo "="*70
+          echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "Server: $(hostname)"
           echo ""
           
           # Navigate to project directory
-          cd /opt/hair_purchase_site || { echo "❌ Project directory not found"; exit 1; }
-          echo "📂 Working directory: $(pwd)"
+          cd /opt/hair_purchase_site || { echo "ERROR: Project directory not found"; exit 1; }
+          echo "Working directory: $(pwd)"
           
-          # Configure git to use HTTPS with token (if available)
+          # Setup Git credentials
           echo ""
-          echo "🔐 Configuring Git credentials..."
-          if [ -n "$GIT_TOKEN" ]; then
-            git config --global credential.helper store
-            echo "https://$GIT_USER:$GIT_TOKEN@github.com" > ~/.git-credentials
-            chmod 600 ~/.git-credentials
-            echo "✅ Git credentials configured"
+          echo "Configuring Git credentials..."
+          git config --global user.email "deploy@hair-purchase.ru"
+          git config --global user.name "GitHub Actions"
+          
+          # Use deploy key (SSH) if available, otherwise use HTTPS
+          if [ -z "$GIT_TOKEN" ]; then
+            echo "Using SSH key for authentication"
+            export GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i /root/.ssh/github_key"
           else
-            echo "ℹ️ No GIT_TOKEN provided, using SSH key"
+            echo "Using GitHub token for authentication"
+            git config --global credential.helper store
+            echo "https://github:$GIT_TOKEN@github.com" > ~/.git-credentials
+            chmod 600 ~/.git-credentials
           fi
           
           # Fetch and reset to origin/main
           echo ""
-          echo "📥 Updating code from GitHub..."
-          git config --global user.email "deploy@hair-purchase.ru"
-          git config --global user.name "GitHub Actions"
-          git fetch origin main --verbose
+          echo "Updating code from GitHub..."
+          git fetch origin main --verbose || { echo "ERROR: Failed to fetch"; exit 1; }
           git reset --hard origin/main
-          git pull origin main
-          echo "✅ Code updated to latest commit: $(git rev-parse --short HEAD)"
+          git pull origin main || { echo "ERROR: Failed to pull"; exit 1; }
+          echo "SUCCESS: Code updated to $(git rev-parse --short HEAD)"
           
           # Activate virtualenv
           echo ""
-          echo "🐍 Activating Python virtual environment..."
-          source venv/bin/activate || { echo "❌ Virtual environment not found"; exit 1; }
-          echo "✅ Virtual environment activated"
-          echo "📍 Python: $(which python)"
+          echo "Activating Python virtual environment..."
+          if [ ! -f venv/bin/activate ]; then
+            echo "ERROR: Virtual environment not found"
+            exit 1
+          fi
+          source venv/bin/activate
+          echo "SUCCESS: Virtual environment activated"
+          echo "Python: $(which python)"
           
           # Install/update dependencies
           echo ""
-          echo "📦 Installing/updating dependencies..."
-          pip install --upgrade pip --quiet
-          pip install -r requirements.txt --quiet
-          echo "✅ Dependencies installed"
+          echo "Installing/updating dependencies..."
+          pip install --upgrade pip --quiet --disable-pip-version-check
+          pip install -r requirements.txt --quiet --disable-pip-version-check
+          echo "SUCCESS: Dependencies installed"
           
           # Create new migrations if needed
           echo ""
-          echo "🔨 Checking for new migrations..."
+          echo "Checking for new migrations..."
           python manage.py makemigrations --dry-run || python manage.py makemigrations
-          echo "✅ Migrations checked"
+          echo "SUCCESS: Migrations checked"
           
           # Apply migrations
           echo ""
-          echo "🗄️ Applying database migrations..."
+          echo "Applying database migrations..."
           python manage.py migrate --noinput --verbosity=1
-          echo "✅ Migrations applied"
+          echo "SUCCESS: Migrations applied"
           
           # Collect static files
           echo ""
-          echo "🎨 Collecting static files..."
+          echo "Collecting static files..."
           python manage.py collectstatic --noinput --verbosity=1
-          echo "✅ Static files collected"
+          echo "SUCCESS: Static files collected"
           
           # Run checks
           echo ""
-          echo "🔍 Running Django checks..."
+          echo "Running Django checks..."
           python manage.py check
-          echo "✅ Django checks passed"
+          echo "SUCCESS: Django checks passed"
           
           # Restart Django service
           echo ""
-          echo "🔁 Restarting Django application service..."
+          echo "Restarting Django application service..."
           if sudo systemctl is-active --quiet hair_purchase; then
             sudo systemctl restart hair_purchase
             sleep 2
             if sudo systemctl is-active --quiet hair_purchase; then
-              echo "✅ Django service restarted successfully"
+              echo "SUCCESS: Django service restarted"
             else
-              echo "❌ Django service failed to restart"
+              echo "ERROR: Django service failed to restart"
               sudo systemctl status hair_purchase --no-pager || true
               exit 1
             fi
           else
-            echo "⚠️ Django service not found, skipping restart"
+            echo "WARNING: Django service not found, skipping restart"
           fi
           
           # Restart Telegram bot service
           echo ""
-          echo "🤖 Restarting Telegram bot service..."
+          echo "Restarting Telegram bot service..."
           if sudo systemctl is-active --quiet hair_purchase_bot; then
             sudo systemctl restart hair_purchase_bot
             sleep 2
             if sudo systemctl is-active --quiet hair_purchase_bot; then
-              echo "✅ Telegram bot restarted successfully"
+              echo "SUCCESS: Telegram bot restarted"
             else
-              echo "⚠️ Telegram bot failed to restart (but deployment successful)"
+              echo "WARNING: Telegram bot failed to restart (but deployment successful)"
             fi
           else
-            echo "ℹ️ Telegram bot service not found"
+            echo "INFO: Telegram bot service not found"
           fi
           
           # Final status
           echo ""
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY"
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "📅 Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "🔗 Commit: $(git rev-parse --short HEAD)"
+          echo "="*70
+          echo "DEPLOYMENT COMPLETED SUCCESSFULLY"
+          echo "="*70
+          echo "Deployed: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "Commit: $(git rev-parse --short HEAD)"
           echo ""
-          echo "🔍 Service Status:"
-          echo "   Django: $(sudo systemctl is-active hair_purchase || echo 'INACTIVE')"
-          echo "   Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'INACTIVE')"
-          echo "═════════════════════════════════════════════════════════════════"
+          echo "Service Status:"
+          echo "  Django: $(sudo systemctl is-active hair_purchase || echo 'INACTIVE')"
+          echo "  Bot: $(sudo systemctl is-active hair_purchase_bot || echo 'INACTIVE')"
+          echo "="*70
         env:
           GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GIT_USER: ${{ github.actor }}
