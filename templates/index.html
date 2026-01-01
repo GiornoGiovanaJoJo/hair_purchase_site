@@ -642,6 +642,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
             font-weight: 500;
+            word-break: break-word;
         }
         
         .alert-success {
@@ -654,6 +655,12 @@
             background: #fee2e2;
             color: #7f1d1d;
             border: 1px solid #fca5a5;
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e3a8a;
+            border: 1px solid #93c5fd;
         }
     </style>
 </head>
@@ -728,7 +735,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="hairAge">Возраст волос (месяцев)</label>
-                    <input type="number" id="hairAge" name="hair_age" min="0" max="120" placeholder="Выстриженные: 0, в росте: 1-36" required>
+                    <input type="number" id="hairAge" name="hair_age" min="0" max="120" placeholder="Выстриженные: 0, в росте: 1-36" value="0" required>
                 </div>
                 
                 <div class="form-group">
@@ -774,7 +781,7 @@
         
         <div class="gallery-grid">
             <div class="gallery-item">
-                <div class="gallery-image">💇</div>
+                <div class="gallery-image">👸</div>
                 <div class="gallery-content">
                     <div class="gallery-title">Блонд славянка</div>
                     <div class="gallery-desc">Натуральный, 60+ см, отличное</div>
@@ -872,7 +879,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Славянка - это натуральные волосы от людей славянского фенотипа. Они самые тюпые, плотные и ценные для профессионального экстендирования.</p>
+                    <p>Славянка - это натуральные волосы от людей славянского фенотипа. Они самые тупые, плотные и ценные для профессионального экстендирования.</p>
                 </div>
             </div>
             
@@ -882,7 +889,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Минимальная длина - 40 см. Однако, чем длиннее волосы, тем выще цена. 60+ см - деютанть цени, 80+ см - премиум!</p>
+                    <p>Минимальная длина - 40 см. Однако, чем длиннее волосы, тем выше цена. 60+ см - дейтант цене, 80+ см - премиум!</p>
                 </div>
             </div>
             
@@ -902,7 +909,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Цена рассчитывается на основе таблицы длины, цвета, структуры, состояния и возраста волос. При выстридженных волосах - ниже!</p>
+                    <p>Цена рассчитывается на основе таблицы длины, цвета, структуры, состояния и возраста волос. При выстриженных волосах - ниже!</p>
                 </div>
             </div>
             
@@ -912,7 +919,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Мы анты волосы в европейским от работа и домашним от благотворительным и мдицинским целям. Всё вчисть!</p>
+                    <p>Мы аноты волосы в европейским от работа и домашним от благотворительным и мдицинским целям. Всё вчисть!</p>
                 </div>
             </div>
             
@@ -922,7 +929,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Да, мы встречаемся лично в Москве. Никаких посылок и гарантий - гарантия только на приим 100% натуральных волос!</p>
+                    <p>Да, мы встречаемся лично в Москве. Никаких посылок и гарантий - гарантия только на прием 100% натуральных волос!</p>
                 </div>
             </div>
         </div>
@@ -936,7 +943,7 @@
         <div class="contact-links">
             <a href="https://t.me/hair-purchase-bot" class="contact-link" target="_blank">📱 Telegram</a>
             <a href="https://wa.me/79999999999" class="contact-link" target="_blank">💬 WhatsApp</a>
-            <a href="tel:+79999999999" class="contact-link">📞 Позвонить</a>
+            <a href="tel:+79999999999" class="contact-link">☎️ Позвонить</a>
         </div>
     </section>
     
@@ -961,40 +968,52 @@
             });
         });
         
-        // Show Alert Message
-        function showAlert(message, type) {
+        // Show Alert Message with auto-close
+        function showAlert(message, type = 'error', duration = 6000) {
             const alertDiv = document.getElementById('alertMessage');
             alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-            setTimeout(() => {
-                alertDiv.innerHTML = '';
-            }, 5000);
+            if (duration > 0) {
+                setTimeout(() => {
+                    alertDiv.innerHTML = '';
+                }, duration);
+            }
         }
         
-        // Form Submit
+        // Form Submit with proper error handling
         document.getElementById('priceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // Collect form data
             const formData = {
                 hair_color: document.getElementById('hairColor').value,
                 hair_length: parseInt(document.getElementById('hairLength').value),
                 hair_structure: document.getElementById('hairStructure').value,
-                hair_age: parseInt(document.getElementById('hairAge').value),
+                hair_age: parseInt(document.getElementById('hairAge').value) || 0,
                 hair_condition: document.getElementById('hairCondition').value,
-                hair_weight: parseInt(document.getElementById('hairWeight').value),
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value || null
             };
             
+            // Validate required fields
+            if (!formData.hair_color || !formData.hair_length || !formData.hair_structure || !formData.hair_condition || !formData.name || !formData.phone) {
+                showAlert('❌ Заполните все обязательные поля', 'error');
+                return;
+            }
+            
+            // Update button state
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const submitText = document.getElementById('submitText');
             const submitSpinner = document.getElementById('submitSpinner');
             
             submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
             submitText.style.display = 'none';
             submitSpinner.style.display = 'inline-block';
             
             try {
+                console.log('Sending form data:', formData);
+                
                 const response = await fetch('/api/applications/', {
                     method: 'POST',
                     headers: {
@@ -1004,25 +1023,50 @@
                     body: JSON.stringify(formData)
                 });
                 
+                console.log('Response status:', response.status);
+                const responseData = await response.json();
+                console.log('Response data:', responseData);
+                
                 if (response.ok) {
-                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами очень скоро!', 'success');
+                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами очень скоро!', 'success', 5000);
                     document.getElementById('priceForm').reset();
+                    document.getElementById('priceOutput').textContent = '-';
+                    document.getElementById('priceNote').textContent = '';
                 } else {
-                    const data = await response.json();
-                    console.error('Error:', data);
-                    showAlert('❌ Ошибка при отправке. Попробуйте основв.', 'error');
+                    // Handle API errors
+                    let errorMsg = '❌ Ошибка при отправке заявки';
+                    
+                    if (responseData.errors) {
+                        // Extract field-specific errors
+                        const errorsList = [];
+                        for (const [field, errors] of Object.entries(responseData.errors)) {
+                            if (Array.isArray(errors)) {
+                                errorsList.push(`${field}: ${errors.join(', ')}`);
+                            } else {
+                                errorsList.push(`${field}: ${errors}`);
+                            }
+                        }
+                        if (errorsList.length > 0) {
+                            errorMsg = `❌ Ошибка: ${errorsList.join('; ')}`;
+                        }
+                    } else if (responseData.message) {
+                        errorMsg = `❌ ${responseData.message}`;
+                    }
+                    
+                    showAlert(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('❌ Ошибка подключения. Попробуйте снова.', 'error');
+                showAlert(`❌ Ошибка подключения: ${error.message}`, 'error');
             } finally {
                 submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
                 submitText.style.display = 'inline';
                 submitSpinner.style.display = 'none';
             }
         });
         
-        // Get CSRF Token
+        // Get CSRF Token from cookies
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
