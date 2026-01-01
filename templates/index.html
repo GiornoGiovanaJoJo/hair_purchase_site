@@ -253,12 +253,18 @@
             border-radius: 12px;
             padding: 40px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
         
         .form-group {
             margin-bottom: 25px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
         
         label {
@@ -292,6 +298,7 @@
             border-radius: 8px;
             text-align: center;
             margin-top: 30px;
+            margin-bottom: 30px;
         }
         
         .price-label {
@@ -314,7 +321,6 @@
         
         .btn-calculate {
             width: 100%;
-            margin-top: 20px;
             padding: 16px;
             font-size: 18px;
         }
@@ -589,6 +595,10 @@
                 padding: 20px;
             }
             
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
             .section-title {
                 font-size: 28px;
             }
@@ -673,37 +683,75 @@
         <div id="alertMessage"></div>
         
         <form id="priceForm">
-            <div class="form-group">
-                <label for="hairColor">Цвет волос</label>
-                <select id="hairColor" required>
-                    <option value="">Выберите цвет...</option>
-                    <option value="blonde">Блонд</option>
-                    <option value="dark_blonde">Тёмный блонд</option>
-                    <option value="light_brown">Светло-коричневый</option>
-                    <option value="brown">Коричневый</option>
-                    <option value="dark_brown">Тёмно-коричневый</option>
-                    <option value="black">Чёрный</option>
-                </select>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hairColor">Цвет волос</label>
+                    <select id="hairColor" name="hair_color" required>
+                        <option value="">Выберите цвет...</option>
+                        <option value="blonde">Блонд</option>
+                        <option value="dark_blonde">Тёмный блонд</option>
+                        <option value="light_brown">Светло-коричневый</option>
+                        <option value="brown">Коричневый</option>
+                        <option value="dark_brown">Тёмно-коричневый</option>
+                        <option value="black">Чёрный</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hairLength">Длина волос (см)</label>
+                    <input type="number" id="hairLength" name="hair_length" min="40" max="150" placeholder="Например: 60" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hairStructure">Структура волос</label>
+                    <select id="hairStructure" name="hair_structure" required>
+                        <option value="">Выберите структуру...</option>
+                        <option value="slavyanka">Славянка (премиум)</option>
+                        <option value="european">Европейка</option>
+                        <option value="asian">Азиатская</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hairCondition">Состояние</label>
+                    <select id="hairCondition" name="hair_condition" required>
+                        <option value="">Выберите состояние...</option>
+                        <option value="excellent">Отличное (натуральные)</option>
+                        <option value="good">Хорошее</option>
+                        <option value="fair">Удовлетворительное</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hairAge">Возраст волос (месяцев)</label>
+                    <input type="number" id="hairAge" name="hair_age" min="0" max="120" placeholder="Выстриженные: 0, в росте: 1-36" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hairWeight">Ориентировочный вес (г)</label>
+                    <input type="number" id="hairWeight" name="hair_weight" min="20" max="500" placeholder="Например: 100" value="100">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Ваше имя</label>
+                    <input type="text" id="name" name="name" placeholder="Иван" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Телефон</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+7 (999) 999-99-99" required>
+                </div>
             </div>
             
             <div class="form-group">
-                <label for="hairLength">Длина волос (см)</label>
-                <input type="number" id="hairLength" min="40" max="150" placeholder="Например: 60" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="hairCondition">Состояние волос</label>
-                <select id="hairCondition" required>
-                    <option value="">Выберите состояние...</option>
-                    <option value="excellent">Отличное (натуральные)</option>
-                    <option value="good">Хорошее (легкие повреждения)</option>
-                    <option value="fair">Удовлетворительное (окрашенные)</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="hairWeight">Примерный вес волос (г)</label>
-                <input type="number" id="hairWeight" min="20" max="500" placeholder="Например: 100" required>
+                <label for="email">Email (опционально)</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
             </div>
             
             <div class="price-display">
@@ -722,14 +770,14 @@
     <!-- GALLERY -->
     <section class="gallery" id="gallery">
         <h2 class="section-title">Примеры волос</h2>
-        <p class="section-subtitle">Волосы разных цветов и состояний которые мы скупаем</p>
+        <p class="section-subtitle">Волосы разных цветов и структур которые мы скупаем</p>
         
         <div class="gallery-grid">
             <div class="gallery-item">
                 <div class="gallery-image">💇</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Блонд натуральный</div>
-                    <div class="gallery-desc">Славянка, длина 60+ см, отличное состояние</div>
+                    <div class="gallery-title">Блонд славянка</div>
+                    <div class="gallery-desc">Натуральный, 60+ см, отличное</div>
                     <div class="gallery-price">35,000 - 50,000 ₽</div>
                 </div>
             </div>
@@ -737,8 +785,8 @@
             <div class="gallery-item">
                 <div class="gallery-image">🧔‍♀️</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Коричневые волосы</div>
-                    <div class="gallery-desc">Натуральный цвет, 50-60 см, без повреждений</div>
+                    <div class="gallery-title">Коричневые евро</div>
+                    <div class="gallery-desc">Натуральные, 50-60 см, хорошее</div>
                     <div class="gallery-price">20,000 - 30,000 ₽</div>
                 </div>
             </div>
@@ -746,26 +794,26 @@
             <div class="gallery-item">
                 <div class="gallery-image">🖤</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Чёрные волосы</div>
-                    <div class="gallery-desc">Толстая структура, 45-55 см, хорошее состояние</div>
-                    <div class="gallery-price">15,000 - 25,000 ₽</div>
+                    <div class="gallery-title">Чёрные азиатские</div>
+                    <div class="gallery-desc">Природные, 45-55 см, хорошее</div>
+                    <div class="gallery-price">18,000 - 28,000 ₽</div>
                 </div>
             </div>
             
             <div class="gallery-item">
                 <div class="gallery-image">✨</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Светлый блонд</div>
-                    <div class="gallery-desc">Редкий цвет, 70+ см, отличное состояние</div>
-                    <div class="gallery-price">40,000 - 50,000 ₽</div>
+                    <div class="gallery-title">Светлая славянка</div>
+                    <div class="gallery-desc">Премиум, 70+ см, отличное</div>
+                    <div class="gallery-price">42,000 - 50,000 ₽</div>
                 </div>
             </div>
             
             <div class="gallery-item">
                 <div class="gallery-image">🌟</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Волосы после окрашивания</div>
-                    <div class="gallery-desc">Окрашенные волосы, 40-50 см</div>
+                    <div class="gallery-title">Окрашенные</div>
+                    <div class="gallery-desc">После декапирания, 40-50 см</div>
                     <div class="gallery-price">8,000 - 15,000 ₽</div>
                 </div>
             </div>
@@ -773,8 +821,8 @@
             <div class="gallery-item">
                 <div class="gallery-image">💎</div>
                 <div class="gallery-content">
-                    <div class="gallery-title">Премиум волосы</div>
-                    <div class="gallery-desc">Длина 80+ см, натуральный блонд</div>
+                    <div class="gallery-title">Премиум Блонд</div>
+                    <div class="gallery-desc">длина 80+ см, натуральные</div>
                     <div class="gallery-price">45,000 - 50,000 ₽</div>
                 </div>
             </div>
@@ -790,25 +838,25 @@
             <div class="step">
                 <div class="step-number">1</div>
                 <h3>Подготовка</h3>
-                <p>Вымойте волосы за 1-2 дня до встречи, высушите и расчешите. Срежьте ровным срезом.</p>
+                <p>Вымойте волосы за 1-2 дня до встречи, высушите и расчешите.</p>
             </div>
             
             <div class="step">
                 <div class="step-number">2</div>
                 <h3>Упаковка</h3>
-                <p>Завяжите волосы в хвост или косу тонкой резинкой. Упакуйте в целлофан или пакет.</p>
+                <p>Завяжите в хвост тонкой резинкой. Упакуйте в целлофан.</p>
             </div>
             
             <div class="step">
                 <div class="step-number">3</div>
-                <h3>Расчет</h3>
-                <p>Используйте наш калькулятор или напишите нам. Мы проверим качество и выставим итоговую цену.</p>
+                <h3>Оценка</h3>
+                <p>Используйте калькулятор или напишите нам. Мы проверим и назовём цену.</p>
             </div>
             
             <div class="step">
                 <div class="step-number">4</div>
-                <h3>Встреча</h3>
-                <p>Встречаемся в Москве. Проверяем волосы, подтверждаем цену и выплачиваем деньги наличными.</p>
+                <h3>Отправка</h3>
+                <p>Можно товар потребителю года. Никаких сроков и рисков!</p>
             </div>
         </div>
     </section>
@@ -820,61 +868,61 @@
         <div class="faq-container">
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Какие волосы вы принимаете?</span>
+                    <span>Что это славянка?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Мы принимаем натуральные волосы длиной от 40 см без видимых повреждений и секущихся концов. Волосы должны быть чистыми и сухими.</p>
+                    <p>Славянка - это натуральные волосы от людей славянского фенотипа. Они самые тюпые, плотные и ценные для профессионального экстендирования.</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Сколько стоят волосы?</span>
+                    <span>Какова минимальная длина?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Цена зависит от длины, цвета, состояния и веса волос. В среднем от 5,000 до 50,000 ₽. Используйте наш калькулятор для точной оценки.</p>
+                    <p>Минимальная длина - 40 см. Однако, чем длиннее волосы, тем выще цена. 60+ см - деютанть цени, 80+ см - премиум!</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Какой вес волос нужен?</span>
+                    <span>Окрашенные волосы - Это лох?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Обычно волосы длиной 60 см весят 80-120 грамм. Чем толще и плотнее волосы, тем больше вес. Минимум 30-50 грамм для скупки.</p>
+                    <p>Не это лох. Мы принимаем окрашенные волосы, но цена будет ниже, так как структура волос ещё тонкая.</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Можно ли продать окрашенные волосы?</span>
+                    <span>Как рассчитывается цена?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Да, но цена будет ниже. Натуральные волосы ценятся больше, чем окрашенные. Однако окрашенные волосы также принимаем по справедливой цене.</p>
+                    <p>Цена рассчитывается на основе таблицы длины, цвета, структуры, состояния и возраста волос. При выстридженных волосах - ниже!</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Как происходит встреча?</span>
+                    <span>Куда аноты волосы?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Встречаемся в Москве в безопасном месте. Проверяем волосы, подтверждаем цену и выплачиваем деньги наличными прямо на месте. Никаких скрытых комиссий.</p>
+                    <p>Мы анты волосы в европейским от работа и домашним от благотворительным и мдицинским целям. Всё вчисть!</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Как быстро получу деньги?</span>
+                    <span>Надо ли снимать волосы лично?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Деньги выплачиваются сразу же на встрече наличными. Никаких задержек и переводов. Все честно и прозрачно.</p>
+                    <p>Да, мы встречаемся лично в Москве. Никаких посылок и гарантий - гарантия только на приим 100% натуральных волос!</p>
                 </div>
             </div>
         </div>
@@ -883,7 +931,7 @@
     <!-- CONTACT CTA -->
     <section class="contact-cta" id="contact">
         <h2>Готовы продать волосы?</h2>
-        <p>Свяжитесь с нами прямо сейчас и получите честную оценку</p>
+        <p>Свяжитесь с нами найдите таймы</p>
         
         <div class="contact-links">
             <a href="https://t.me/hair-purchase-bot" class="contact-link" target="_blank">📱 Telegram</a>
@@ -913,47 +961,6 @@
             });
         });
         
-        // Price Calculator
-        const priceMultipliers = {
-            'blonde': 1.8,
-            'dark_blonde': 1.6,
-            'light_brown': 1.4,
-            'brown': 1.3,
-            'dark_brown': 1.2,
-            'black': 1.1
-        };
-        
-        const conditionMultipliers = {
-            'excellent': 1.0,
-            'good': 0.8,
-            'fair': 0.6
-        };
-        
-        const basePrice = 80; // ₽ за грамм
-        
-        function updatePrice() {
-            const color = document.getElementById('hairColor').value;
-            const weight = parseFloat(document.getElementById('hairWeight').value) || 0;
-            const condition = document.getElementById('hairCondition').value;
-            
-            if (!color || !condition || weight === 0) {
-                document.getElementById('priceOutput').textContent = '-';
-                document.getElementById('priceNote').textContent = '';
-                return;
-            }
-            
-            const colorMult = priceMultipliers[color] || 1;
-            const condMult = conditionMultipliers[condition] || 1;
-            const price = Math.round(basePrice * weight * colorMult * condMult);
-            
-            document.getElementById('priceOutput').textContent = price.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('priceNote').textContent = `Примерная стоимость (${weight}г волос ${color})`;
-        }
-        
-        document.getElementById('hairColor').addEventListener('change', updatePrice);
-        document.getElementById('hairWeight').addEventListener('input', updatePrice);
-        document.getElementById('hairCondition').addEventListener('change', updatePrice);
-        
         // Show Alert Message
         function showAlert(message, type) {
             const alertDiv = document.getElementById('alertMessage');
@@ -967,10 +974,17 @@
         document.getElementById('priceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const color = document.getElementById('hairColor').value;
-            const length = document.getElementById('hairLength').value;
-            const condition = document.getElementById('hairCondition').value;
-            const weight = document.getElementById('hairWeight').value;
+            const formData = {
+                hair_color: document.getElementById('hairColor').value,
+                hair_length: parseInt(document.getElementById('hairLength').value),
+                hair_structure: document.getElementById('hairStructure').value,
+                hair_age: parseInt(document.getElementById('hairAge').value),
+                hair_condition: document.getElementById('hairCondition').value,
+                hair_weight: parseInt(document.getElementById('hairWeight').value),
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value || null
+            };
             
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const submitText = document.getElementById('submitText');
@@ -987,26 +1001,20 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     },
-                    body: JSON.stringify({
-                        hair_color: color,
-                        hair_length: parseInt(length),
-                        hair_condition: condition,
-                        hair_weight: parseInt(weight)
-                    })
+                    body: JSON.stringify(formData)
                 });
                 
                 if (response.ok) {
-                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.', 'success');
+                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами очень скоро!', 'success');
                     document.getElementById('priceForm').reset();
-                    updatePrice();
                 } else {
                     const data = await response.json();
                     console.error('Error:', data);
-                    showAlert('❌ Ошибка при отправке заявки. Попробуйте ещё раз.', 'error');
+                    showAlert('❌ Ошибка при отправке. Попробуйте основв.', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('❌ Ошибка подключения. Проверьте интернет и попробуйте снова.', 'error');
+                showAlert('❌ Ошибка подключения. Попробуйте снова.', 'error');
             } finally {
                 submitBtn.classList.remove('loading');
                 submitText.style.display = 'inline';
