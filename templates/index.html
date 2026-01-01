@@ -998,11 +998,11 @@
             
             try {
                 const payload = {
-                    hair_color: colorSelect.value,
-                    hair_length: parseInt(lengthInput.value),
-                    hair_structure: structureSelect.value,
-                    hair_age: parseInt(ageInput.value) || 0,
-                    hair_condition: conditionSelect.value
+                    color: colorSelect.value,
+                    length: parseInt(lengthInput.value),
+                    structure: structureSelect.value,
+                    age: parseInt(ageInput.value) || 0,
+                    condition: conditionSelect.value
                 };
                 
                 console.log('Calculating price with:', payload);
@@ -1086,11 +1086,11 @@
             
             // Prepare JSON data
             const jsonData = {
-                hair_color: document.getElementById('hairColor').value,
-                hair_length: parseInt(document.getElementById('hairLength').value),
-                hair_structure: document.getElementById('hairStructure').value,
-                hair_age: parseInt(document.getElementById('hairAge').value) || 0,
-                hair_condition: document.getElementById('hairCondition').value,
+                color: document.getElementById('hairColor').value,
+                length: parseInt(document.getElementById('hairLength').value),
+                structure: document.getElementById('hairStructure').value,
+                age: parseInt(document.getElementById('hairAge').value) || 0,
+                condition: document.getElementById('hairCondition').value,
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value || null,
@@ -1099,7 +1099,7 @@
             };
             
             // Validate required fields
-            if (!jsonData.hair_color || !jsonData.hair_length || !jsonData.hair_structure || !jsonData.hair_condition || !jsonData.name || !jsonData.phone) {
+            if (!jsonData.color || !jsonData.length || !jsonData.structure || !jsonData.condition || !jsonData.name || !jsonData.phone) {
                 showAlert('❌ Заполните все обязательные поля!', 'error');
                 return;
             }
