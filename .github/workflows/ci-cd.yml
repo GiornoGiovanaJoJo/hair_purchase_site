@@ -87,7 +87,7 @@ jobs:
         VPS_HOST: ${{ secrets.VPS_HOST }}
         VPS_USER: ${{ secrets.VPS_USER }}
       run: |
-        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=5 $VPS_USER@$VPS_HOST "echo 'SSH connection successful' && pwd"
+        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=5 $VPS_USER@$VPS_HOST "echo 'SSH connection successful'"
     
     - name: Deploy
       env:
@@ -95,47 +95,53 @@ jobs:
         VPS_USER: ${{ secrets.VPS_USER }}
         VPS_PROJECT_PATH: ${{ secrets.VPS_PROJECT_PATH }}
       run: |
-        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=10 $VPS_USER@$VPS_HOST bash -c '
-        set -e
-        echo "Checking project path: $VPS_PROJECT_PATH"
-        ls -la "$VPS_PROJECT_PATH" || (echo "Project path does not exist" && exit 1)
+        cat > /tmp/deploy.sh << 'DEPLOY_EOF'
+#!/bin/bash
+set -e
+PROJECT_PATH="$1"
+
+echo "Checking project path: $PROJECT_PATH"
+ls -la "$PROJECT_PATH" || (echo "Project path does not exist" && exit 1)
+
+echo "Checking if git repo exists"
+cd "$PROJECT_PATH"
+git status || (echo "Not a git repository" && exit 1)
+
+echo "Step 1: Updating repository..."
+git fetch origin main
+git reset --hard origin/main
+echo "✓ Repository updated"
+
+echo "Step 2: Activating virtual environment..."
+[ -d venv ] || (echo "venv not found" && exit 1)
+source venv/bin/activate
+echo "✓ Virtual environment activated"
+
+echo "Step 3: Installing dependencies..."
+pip install --upgrade pip --quiet
+pip install -r requirements.txt --quiet
+echo "✓ Dependencies installed"
+
+echo "Step 4: Running migrations..."
+python manage.py migrate --verbosity=1 || true
+echo "✓ Migrations completed"
+
+echo "Step 5: Collecting static files..."
+python manage.py collectstatic --noinput --quiet || true
+echo "✓ Static files collected"
+
+echo "Step 6: Restarting services..."
+sudo systemctl restart gunicorn 2>/dev/null || echo "⚠ Could not restart gunicorn"
+sleep 2
+sudo systemctl restart nginx 2>/dev/null || echo "⚠ Could not restart nginx"
+echo "✓ Services restarted"
+
+echo ""
+echo "Deployment completed successfully!"
+DEPLOY_EOF
         
-        echo "Checking if git repo exists"
-        cd "$VPS_PROJECT_PATH"
-        git status || (echo "Not a git repository" && exit 1)
-        
-        echo "Step 1: Updating repository..."
-        git fetch origin main
-        git reset --hard origin/main
-        echo "✓ Repository updated"
-        
-        echo "Step 2: Activating virtual environment..."
-        [ -d venv ] || (echo "venv not found" && exit 1)
-        source venv/bin/activate
-        echo "✓ Virtual environment activated"
-        
-        echo "Step 3: Installing dependencies..."
-        pip install --upgrade pip --quiet
-        pip install -r requirements.txt --quiet
-        echo "✓ Dependencies installed"
-        
-        echo "Step 4: Running migrations..."
-        python manage.py migrate --verbosity=1 || true
-        echo "✓ Migrations completed"
-        
-        echo "Step 5: Collecting static files..."
-        python manage.py collectstatic --noinput --quiet || true
-        echo "✓ Static files collected"
-        
-        echo "Step 6: Restarting services..."
-        sudo systemctl restart gunicorn 2>/dev/null || echo "⚠ Could not restart gunicorn"
-        sleep 2
-        sudo systemctl restart nginx 2>/dev/null || echo "⚠ Could not restart nginx"
-        echo "✓ Services restarted"
-        
-        echo ""
-        echo "Deployment completed successfully!"
-        '
+        chmod +x /tmp/deploy.sh
+        ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST /tmp/deploy.sh "$VPS_PROJECT_PATH"
     
     - name: Health check
       run: |
