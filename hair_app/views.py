@@ -73,6 +73,7 @@ def normalize_length_for_calculator(length_input):
 def normalize_request_data(request):
     """
     🖨 CRITICAL FIX: Конвертирует данные из HTML Form (списки) в JSON-like формат (строки)
+    И ПРАВИЛЬНО ОБРАБАТЫВАЕТ MULTIPART/FORM-DATA!
     
     HTML Form отправляет:
         'phone': ['+79265383145']  ← CПИСОК!
@@ -87,8 +88,18 @@ def normalize_request_data(request):
     # Создаём НОВЫЙ dict (не копируем QueryDict)
     normalized = {}
     
+    logger.info(f"🔧 normalize_request_data() called")
+    logger.info(f"🔧 request.data type: {type(request.data).__name__}")
+    logger.info(f"🔧 request.data keys: {list(request.data.keys())}")
+    
     for key, value in request.data.items():
         logger.info(f"🔧 Processing key='{key}', value_type={type(value).__name__}, value={value}")
+        
+        # Пропускаем файлы - они обрабатываются отдельно DRF
+        if hasattr(value, 'read'):  # This is a file object
+            logger.info(f"🔧 Skipping file field: {key}")
+            normalized[key] = value
+            continue
         
         # Если это список с одним элементом, извлекаем его
         if isinstance(value, list):
@@ -97,7 +108,7 @@ def normalize_request_data(request):
                 normalized[key] = value[0]
                 logger.info(f"🔧 Converted list with 1 element: [{value[0]}] → '{value[0]}'")
             elif len(value) == 0:
-                # Пустой список → ПОМНИНАЕМ (don't add to dict)
+                # Пустой список → ПРОПУСКАЕМ (don't add to dict)
                 logger.info(f"🔧 Skipping empty list for key '{key}'")
                 continue
             else:
@@ -107,14 +118,15 @@ def normalize_request_data(request):
         else:
             # Не список → проверяем пусто ли
             if isinstance(value, str) and value == '':
-                # Пустая строка → ПОМНИНАЕМ (don't add to dict)
+                # Пустая строка → ПРОПУСКАЕМ (don't add to dict)
                 logger.info(f"🔧 Skipping empty string for key '{key}'")
                 continue
             else:
-                # Непустая строка или другое жанре → оставляем
+                # Непустая строка или другое значение → оставляем
                 normalized[key] = value
                 logger.info(f"🔧 Keeping as-is: {value}")
     
+    logger.info(f"🔧 Final normalized data keys: {list(normalized.keys())}")
     logger.info(f"🔧 Final normalized data: {normalized}")
     return normalized
 
@@ -138,7 +150,8 @@ class HairApplicationViewSet(viewsets.ModelViewSet):
         Это КРИТИЧНО для возврата понятных ошибок вместо generic 400.
         """
         try:
-            logger.info(f"Creating hair application with ORIGINAL data: {request.data}")
+            logger.info(f"Creating hair application with ORIGINAL data keys: {list(request.data.keys())}")
+            logger.info(f"Creating hair application with ORIGINAL data: {dict(request.data)}")
             
             # 🖨 КРИТИЧЕСКИЙ FIX: Нормализуем форму данные (списки -> строки, удаляем пустые)
             normalized_data = normalize_request_data(request)
