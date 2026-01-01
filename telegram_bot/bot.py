@@ -89,48 +89,65 @@ async def cmd_start(message: types.Message):
     """Приветственное сообщение"""
     await message.answer(
         "👋 <b>Привет!</b>\n\n"
-        "Я бот для управления заявками на скупку волос.\n\n"
+        "Н бот для управления заявками на скупку волос.\n\n"
         "<b>Доступные команды:</b>\n"
         "/start - Показать это сообщение\n"
-        "/new - Посмотреть новые заявки\n"
-        "/all - Посмотреть все заявки\n"
+        "/queue - Показать все незавершённые заявки (📂 очередь)\n"
+        "/all - Показать все заявки\n"
         "/stats - Статистика\n\n"
         f"🔑 <b>Your Chat ID:</b> <code>{message.from_user.id}</code>\n"
         "(Скопируй этот ID в TELEGRAM_ADMIN_CHAT_ID в .env)"
     )
 
-@dp.message(Command("new"))
-async def cmd_new_applications(message: types.Message):
-    """Показать новые заявки"""
+@dp.message(Command("queue"))
+async def cmd_queue_applications(message: types.Message):
+    """Показать все незавершённые заявки (новые, просмотренные, принятые)"""
     @sync_to_async
-    def get_new_apps():
-        return list(HairApplication.objects.filter(status='new').order_by('-created_at')[:5])
+    def get_pending_apps():
+        # Восюде кроме completed и rejected
+        return list(HairApplication.objects.exclude(
+            status__in=['completed', 'rejected']
+        ).order_by('-created_at'))
     
-    new_apps = await get_new_apps()
+    pending_apps = await get_pending_apps()
     
-    if not new_apps:
-        await message.answer("📋 <b>Новых заявок нет</b>")
+    if not pending_apps:
+        await message.answer("📂 <b>Очередь пуста</b>")
         return
     
-    text = f"🆕 <b>Новые заявки ({len(new_apps)}):</b>\n\n"
+    # Статистика
+    new_count = sum(1 for app in pending_apps if app.status == 'new')
+    viewed_count = sum(1 for app in pending_apps if app.status == 'viewed')
+    accepted_count = sum(1 for app in pending_apps if app.status == 'accepted')
     
-    for app in new_apps:
-        text += format_application_short(app)
+    summary = (
+        f"📂 <b>Очередь заявок ({len(pending_apps)}):</b>\n\n"
+        f"🔵 🎭 Активных:\n"
+        f"   🕴 Просмотренных: {viewed_count}\n"
+        f"   🟄 Принятых: {accepted_count}\n"
+        f"   📥 Новых: {new_count}\n\n"
+    )
+    
+    await message.answer(summary)
+    
+    # Отправляем каждую заявку отдельным сообщением
+    for app in pending_apps:
+        text = format_application_full(app)
         keyboard = get_application_keyboard(app.id, app.status)
         await message.answer(text, reply_markup=keyboard)
-        text = ""  # Сбрасываем для следующей заявки
+        await asyncio.sleep(0.1)  # Короткая задержка для Telegram
 
 @dp.message(Command("all"))
 async def cmd_all_applications(message: types.Message):
     """Показать все заявки"""
     @sync_to_async
     def get_all_apps():
-        return list(HairApplication.objects.all().order_by('-created_at')[:10])
+        return list(HairApplication.objects.all().order_by('-created_at')[:15])
     
     all_apps = await get_all_apps()
     
     if not all_apps:
-        await message.answer("📋 <b>Заявок нет</b>")
+        await message.answer("📂 <b>Заявок нет</b>")
         return
     
     text = f"📄 <b>Последние {len(all_apps)} заявок:</b>\n\n"
@@ -158,13 +175,13 @@ async def cmd_stats(message: types.Message):
     stats = await get_stats()
     
     text = (
-        "📊 <b>Статистика заявок:</b>\n\n"
-        f"📝 Всего: <b>{stats['total']}</b>\n"
-        f"🆕 Новых: <b>{stats['new']}</b>\n"
-        f"👀 Просмотрено: <b>{stats['viewed']}</b>\n"
+        "📈 <b>Статистика заявок:</b>\n\n"
+        f"📋 Всего: <b>{stats['total']}</b>\n"
+        f"📥 Новых: <b>{stats['new']}</b>\n"
+        f"🕴 Просмотрено: <b>{stats['viewed']}</b>\n"
         f"✅ Принято: <b>{stats['accepted']}</b>\n"
         f"🎉 Завершено: <b>{stats['completed']}</b>\n"
-        f"❌ Отклонено: <b>{stats['rejected']}</b>"
+        f❌ Отклонено: <b>{stats['rejected']}</b>"
     )
     
     await message.answer(text)
@@ -212,15 +229,15 @@ async def process_application_callback(callback: types.CallbackQuery):
         
         # Обрабатываем действия
         if action == "view":
-            # Просмотр заявки (меняем статус на viewed если была new)
+            # Просмотр заявки - АВТОМАТИЧЕСКИ меняем статус на "viewed"
             if app.status == 'new':
                 await update_app_status(app, 'viewed')
             
             text = format_application_full(app)
-            keyboard = get_application_keyboard(app.id, 'viewed')
+            keyboard = get_application_keyboard(app.id, app.status)
             
             await callback.message.edit_text(text, reply_markup=keyboard)
-            await callback.answer("👀 Заявка просмотрена")
+            await callback.answer("🕴 Заявка просмотрена")
         
         elif action == "accept":
             old_status = await update_app_status(app, 'accepted')
@@ -261,20 +278,20 @@ async def process_application_callback(callback: types.CallbackQuery):
 def format_application_short(app: HairApplication) -> str:
     """Краткое описание заявки"""
     status_emoji = {
-        'new': '🆕',
-        'viewed': '👀',
+        'new': '📥',
+        'viewed': '🕴',
         'accepted': '✅',
         'completed': '🎉',
         'rejected': '❌'
     }
     
-    emoji = status_emoji.get(app.status, '📝')
+    emoji = status_emoji.get(app.status, '📋')
     status_text = app.get_status_display()
     
     text = (
         f"{emoji} <b>Заявка #{app.id}</b>\n"
         f"👤 {app.name}\n"
-        f"📞 {app.phone}\n"
+        f"📂 {app.phone}\n"
         f"📅 {app.created_at.strftime('%d.%m.%Y %H:%M')}\n"
         f"🎯 Статус: <b>{status_text}</b>"
     )
@@ -284,36 +301,36 @@ def format_application_short(app: HairApplication) -> str:
 def format_application_full(app: HairApplication) -> str:
     """Полное описание заявки"""
     status_emoji = {
-        'new': '🆕',
-        'viewed': '👀',
+        'new': '📥',
+        'viewed': '🕴',
         'accepted': '✅',
         'completed': '🎉',
         'rejected': '❌'
     }
     
-    emoji = status_emoji.get(app.status, '📝')
+    emoji = status_emoji.get(app.status, '📋')
     status_text = app.get_status_display()
     
     text = (
         f"{emoji} <b>Заявка #{app.id}</b>\n\n"
         f"👤 <b>Имя:</b> {app.name}\n"
-        f"📞 <b>Телефон:</b> {app.phone}\n"
+        f"📂 <b>Телефон:</b> {app.phone}\n"
     )
     
     if app.email:
         text += f"📧 <b>Email:</b> {app.email}\n"
     
     if app.city:
-        text += f"🏙 <b>Город:</b> {app.city}\n"
+        text += f"🎫 <b>Город:</b> {app.city}\n"
     
-    text += f"\n📏 <b>Длина:</b> {app.get_length_display()}\n"
-    text += f"🎨 <b>Цвет:</b> {app.get_color_display()}\n"
-    text += f"🧬 <b>Структура:</b> {app.get_structure_display()}\n"
+    text += f"\n📐 <b>Длина:</b> {app.get_length_display()}\n"
+    text += f"🎫 <b>Цвет:</b> {app.get_color_display()}\n"
+    text += f"🔬 <b>Структура:</b> {app.get_structure_display()}\n"
     text += f"👶 <b>Возраст:</b> {app.get_age_display()}\n"
-    text += f"💆 <b>Состояние:</b> {app.get_condition_display()}\n"
+    text += f"👧 <b>Состояние:</b> {app.get_condition_display()}\n"
     
     if app.comment:
-        text += f"\n💬 <b>Комментарий:</b> {app.comment}\n"
+        text += f"\n🗣 <b>Комментарий:</b> {app.comment}\n"
     
     if app.estimated_price:
         text += f"\n💰 <b>Предв. цена:</b> {app.estimated_price} ₽\n"
@@ -332,7 +349,7 @@ def get_application_keyboard(app_id: int, status: str) -> InlineKeyboardMarkup:
     if status == 'new':
         # Новая заявка: можно просмотреть, принять или отклонить
         buttons.append([
-            InlineKeyboardButton(text="👀 Просмотреть", callback_data=f"view_{app_id}")
+            InlineKeyboardButton(text="🕴 Просмотреть", callback_data=f"view_{app_id}")
         ])
         buttons.append([
             InlineKeyboardButton(text="✅ Принять", callback_data=f"accept_{app_id}"),
@@ -366,7 +383,7 @@ def get_application_keyboard(app_id: int, status: str) -> InlineKeyboardMarkup:
 async def send_new_application_notification(app_id: int):
     """
     Отправить уведомление о новой заявке.
-    Вызывается из Django view после создания заявки.
+    Вызывается из Django view после сохранения заявки.
     """
     @sync_to_async
     def get_app(app_id):
@@ -383,7 +400,7 @@ async def send_new_application_notification(app_id: int):
             return
         
         text = (
-            "🔔 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
+            "🔔 <b>НОВАЙ ЗАЯВКА!</b>\n\n"
             + format_application_full(app)
         )
         
@@ -413,7 +430,7 @@ async def send_new_application_notification(app_id: int):
                             )
                         )
                 except Exception as e:
-                    logger.error(f"Ошибка при загрузке фото {field_name}: {e}")
+                    logger.error(f"Ошибка при загруже фото {field_name}: {e}")
         
         if media_group:
             await bot.send_media_group(
@@ -449,7 +466,7 @@ async def main():
             logger.warning(f"[BOT] Не удалось отправить сообщение админу: {e}")
         
         # Запускаем polling
-        logger.info("[BOT] Запуск polling...")
+        logger.info("[BOT] Запуск поллинг...")
         await dp.start_polling(bot)
         
     except Exception as e:
