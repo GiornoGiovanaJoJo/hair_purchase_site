@@ -626,6 +626,25 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border: 1px solid #fca5a5;
+        }
     </style>
 </head>
 <body>
@@ -651,7 +670,9 @@
     <section class="calculator" id="calculator">
         <h2 style="text-align: center; margin-bottom: 30px; color: var(--primary);">Калькулятор Цены</h2>
         
-        <form id="priceForm" onsubmit="calculatePrice(event)">
+        <div id="alertMessage"></div>
+        
+        <form id="priceForm">
             <div class="form-group">
                 <label for="hairColor">Цвет волос</label>
                 <select id="hairColor" required>
@@ -705,7 +726,7 @@
         
         <div class="gallery-grid">
             <div class="gallery-item">
-                <div class="gallery-image">👰</div>
+                <div class="gallery-image">💇</div>
                 <div class="gallery-content">
                     <div class="gallery-title">Блонд натуральный</div>
                     <div class="gallery-desc">Славянка, длина 60+ см, отличное состояние</div>
@@ -714,7 +735,7 @@
             </div>
             
             <div class="gallery-item">
-                <div class="gallery-image">🤎</div>
+                <div class="gallery-image">🧔‍♀️</div>
                 <div class="gallery-content">
                     <div class="gallery-title">Коричневые волосы</div>
                     <div class="gallery-desc">Натуральный цвет, 50-60 см, без повреждений</div>
@@ -933,6 +954,15 @@
         document.getElementById('hairWeight').addEventListener('input', updatePrice);
         document.getElementById('hairCondition').addEventListener('change', updatePrice);
         
+        // Show Alert Message
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 5000);
+        }
+        
         // Form Submit
         document.getElementById('priceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -966,16 +996,17 @@
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    alert('✅ Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.', 'success');
                     document.getElementById('priceForm').reset();
                     updatePrice();
                 } else {
-                    alert('❌ Ошибка при отправке заявки. Попробуйте еще раз.');
+                    const data = await response.json();
+                    console.error('Error:', data);
+                    showAlert('❌ Ошибка при отправке заявки. Попробуйте ещё раз.', 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('❌ Ошибка подключения. Проверьте интернет и попробуйте снова.');
+                showAlert('❌ Ошибка подключения. Проверьте интернет и попробуйте снова.', 'error');
             } finally {
                 submitBtn.classList.remove('loading');
                 submitText.style.display = 'inline';
