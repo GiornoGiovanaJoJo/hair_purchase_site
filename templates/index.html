@@ -47,31 +47,6 @@
     }
     </script>
     
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {
-                "@type": "Question",
-                "name": "Какие волосы вы принимаете?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Натуральные волосы длиной от 40 см без повреждений и секущихся концов"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "Сколько стоят волосы?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "От 5000 до 50000 ₽ в зависимости от длины, цвета и состояния"
-                }
-            }
-        ]
-    }
-    </script>
-    
     <style>
         * {
             margin: 0;
@@ -275,7 +250,7 @@
             font-size: 14px;
         }
         
-        select, input {
+        select, input, textarea {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid var(--border);
@@ -285,10 +260,68 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         
-        select:focus, input:focus {
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        select:focus, input:focus, textarea:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        /* === PHOTO UPLOAD === */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .upload-card {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-card:hover {
+            border-color: var(--primary);
+            background: rgba(30, 64, 175, 0.02);
+        }
+        
+        .upload-card input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-label {
+            display: block;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .preview-image {
+            width: 100%;
+            max-height: 150px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            object-fit: cover;
+        }
+        
+        .preview-image.active {
+            display: block;
         }
         
         .price-display {
@@ -599,6 +632,10 @@
                 grid-template-columns: 1fr;
             }
             
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+            
             .section-title {
                 font-size: 28px;
             }
@@ -740,7 +777,7 @@
                 
                 <div class="form-group">
                     <label for="hairWeight">Ориентировочный вес (г)</label>
-                    <input type="number" id="hairWeight" name="hair_weight" min="20" max="500" placeholder="Например: 100" value="100">
+                    <input type="number" id="hairWeight" name="hair_weight" min="20" max="500" placeholder="100" value="100">
                 </div>
             </div>
             
@@ -756,9 +793,53 @@
                 </div>
             </div>
             
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email (опционально)</label>
+                    <input type="email" id="email" name="email" placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="city">Город (опционально)</label>
+                    <input type="text" id="city" name="city" placeholder="Москва">
+                </div>
+            </div>
+            
             <div class="form-group">
-                <label for="email">Email (опционально)</label>
-                <input type="email" id="email" name="email" placeholder="your@email.com">
+                <label for="comment">Комментарий (опционально)</label>
+                <textarea id="comment" name="comment" placeholder="Например: волосы с пармой..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>От отрицие фото (опционально)</label>
+                <div class="upload-grid">
+                    <div class="upload-card">
+                        <input type="file" id="photo1" name="photo1" accept="image/*" class="file-input">
+                        <label for="photo1" class="upload-label">
+                            <div class="upload-icon">📸</div>
+                            <span>Фото 1</span>
+                        </label>
+                        <img id="preview1" class="preview-image" alt="Preview 1">
+                    </div>
+                    
+                    <div class="upload-card">
+                        <input type="file" id="photo2" name="photo2" accept="image/*" class="file-input">
+                        <label for="photo2" class="upload-label">
+                            <div class="upload-icon">📸</div>
+                            <span>Фото 2</span>
+                        </label>
+                        <img id="preview2" class="preview-image" alt="Preview 2">
+                    </div>
+                    
+                    <div class="upload-card">
+                        <input type="file" id="photo3" name="photo3" accept="image/*" class="file-input">
+                        <label for="photo3" class="upload-label">
+                            <div class="upload-icon">📸</div>
+                            <span>Фото 3</span>
+                        </label>
+                        <img id="preview3" class="preview-image" alt="Preview 3">
+                    </div>
+                </div>
             </div>
             
             <div class="price-display">
@@ -806,33 +887,6 @@
                     <div class="gallery-price">18,000 - 28,000 ₽</div>
                 </div>
             </div>
-            
-            <div class="gallery-item">
-                <div class="gallery-image">✨</div>
-                <div class="gallery-content">
-                    <div class="gallery-title">Светлая славянка</div>
-                    <div class="gallery-desc">Премиум, 70+ см, отличное</div>
-                    <div class="gallery-price">42,000 - 50,000 ₽</div>
-                </div>
-            </div>
-            
-            <div class="gallery-item">
-                <div class="gallery-image">🌟</div>
-                <div class="gallery-content">
-                    <div class="gallery-title">Окрашенные</div>
-                    <div class="gallery-desc">После декапирания, 40-50 см</div>
-                    <div class="gallery-price">8,000 - 15,000 ₽</div>
-                </div>
-            </div>
-            
-            <div class="gallery-item">
-                <div class="gallery-image">💎</div>
-                <div class="gallery-content">
-                    <div class="gallery-title">Премиум Блонд</div>
-                    <div class="gallery-desc">длина 80+ см, натуральные</div>
-                    <div class="gallery-price">45,000 - 50,000 ₽</div>
-                </div>
-            </div>
         </div>
     </section>
     
@@ -863,7 +917,7 @@
             <div class="step">
                 <div class="step-number">4</div>
                 <h3>Отправка</h3>
-                <p>Можно товар потребителю года. Никаких сроков и рисков!</p>
+                <p>Мю ли мне отправь комнату. Никаких сроков и рисков!</p>
             </div>
         </div>
     </section>
@@ -879,7 +933,7 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Славянка - это натуральные волосы от людей славянского фенотипа. Они самые тупые, плотные и ценные для профессионального экстендирования.</p>
+                    <p>Славянка - это натуральные волосы от людей славянского фенотипа. Они самые тупые, плотные и ценные.</p>
                 </div>
             </div>
             
@@ -889,47 +943,17 @@
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Минимальная длина - 40 см. Однако, чем длиннее волосы, тем выше цена. 60+ см - дейтант цене, 80+ см - премиум!</p>
+                    <p>Минимальная длина - 40 см. Чем длиннее, тем выше цена!</p>
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question">
-                    <span>Окрашенные волосы - Это лох?</span>
+                    <span>Вы лицно мне не встречаетесь?</span>
                     <span class="faq-toggle">▼</span>
                 </div>
                 <div class="faq-answer">
-                    <p>Не это лох. Мы принимаем окрашенные волосы, но цена будет ниже, так как структура волос ещё тонкая.</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Как рассчитывается цена?</span>
-                    <span class="faq-toggle">▼</span>
-                </div>
-                <div class="faq-answer">
-                    <p>Цена рассчитывается на основе таблицы длины, цвета, структуры, состояния и возраста волос. При выстриженных волосах - ниже!</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Куда аноты волосы?</span>
-                    <span class="faq-toggle">▼</span>
-                </div>
-                <div class="faq-answer">
-                    <p>Мы аноты волосы в европейским от работа и домашним от благотворительным и мдицинским целям. Всё вчисть!</p>
-                </div>
-            </div>
-            
-            <div class="faq-item">
-                <div class="faq-question">
-                    <span>Надо ли снимать волосы лично?</span>
-                    <span class="faq-toggle">▼</span>
-                </div>
-                <div class="faq-answer">
-                    <p>Да, мы встречаемся лично в Москве. Никаких посылок и гарантий - гарантия только на прием 100% натуральных волос!</p>
+                    <p>Да, мы встречаемся лично в Москве. Никаких посылок!</p>
                 </div>
             </div>
         </div>
@@ -938,28 +962,40 @@
     <!-- CONTACT CTA -->
     <section class="contact-cta" id="contact">
         <h2>Готовы продать волосы?</h2>
-        <p>Свяжитесь с нами найдите таймы</p>
+        <p>Свяжитесь с нами</p>
         
         <div class="contact-links">
             <a href="https://t.me/hair-purchase-bot" class="contact-link" target="_blank">📱 Telegram</a>
             <a href="https://wa.me/79999999999" class="contact-link" target="_blank">💬 WhatsApp</a>
-            <a href="tel:+79999999999" class="contact-link">☎️ Позвонить</a>
+            <a href="tel:+79999999999" class="contact-link">☎️ Call</a>
         </div>
     </section>
     
     <!-- FOOTER -->
     <footer>
         <div class="footer-content">
-            <p>&copy; 2026 Hair Purchase. Скупка натуральных волос в Москве.</p>
-            <div class="footer-links">
-                <a href="#" class="footer-link">Политика конфиденциальности</a>
-                <a href="#" class="footer-link">Условия использования</a>
-                <a href="#" class="footer-link">Контакты</a>
-            </div>
+            <p>&copy; 2026 Hair Purchase</p>
         </div>
     </footer>
     
     <script>
+        // Photo preview
+        ['photo1', 'photo2', 'photo3'].forEach((id, index) => {
+            const input = document.getElementById(id);
+            const preview = document.getElementById(`preview${index + 1}`);
+            
+            input.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        preview.src = event.target.result;
+                        preview.classList.add('active');
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+        });
+        
         // FAQ Toggle
         document.querySelectorAll('.faq-question').forEach(question => {
             question.addEventListener('click', () => {
@@ -968,7 +1004,7 @@
             });
         });
         
-        // Show Alert Message with auto-close
+        // Show Alert Message
         function showAlert(message, type = 'error', duration = 6000) {
             const alertDiv = document.getElementById('alertMessage');
             alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
@@ -979,12 +1015,14 @@
             }
         }
         
-        // Form Submit with proper error handling
+        // Form Submit
         document.getElementById('priceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Collect form data
-            const formData = {
+            const formData = new FormData(e.target);
+            
+            // Prepare JSON data (without files for now)
+            const jsonData = {
                 hair_color: document.getElementById('hairColor').value,
                 hair_length: parseInt(document.getElementById('hairLength').value),
                 hair_structure: document.getElementById('hairStructure').value,
@@ -992,16 +1030,17 @@
                 hair_condition: document.getElementById('hairCondition').value,
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value || null
+                email: document.getElementById('email').value || null,
+                city: document.getElementById('city').value || null,
+                comment: document.getElementById('comment').value || null
             };
             
             // Validate required fields
-            if (!formData.hair_color || !formData.hair_length || !formData.hair_structure || !formData.hair_condition || !formData.name || !formData.phone) {
-                showAlert('❌ Заполните все обязательные поля', 'error');
+            if (!jsonData.hair_color || !jsonData.hair_length || !jsonData.hair_structure || !jsonData.hair_condition || !jsonData.name || !jsonData.phone) {
+                showAlert('❌ Заполните все обязательные поля!', 'error');
                 return;
             }
             
-            // Update button state
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const submitText = document.getElementById('submitText');
             const submitSpinner = document.getElementById('submitSpinner');
@@ -1012,7 +1051,7 @@
             submitSpinner.style.display = 'inline-block';
             
             try {
-                console.log('Sending form data:', formData);
+                console.log('Sending:', jsonData);
                 
                 const response = await fetch('/api/applications/', {
                     method: 'POST',
@@ -1020,24 +1059,23 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(jsonData)
                 });
                 
-                console.log('Response status:', response.status);
+                console.log('Status:', response.status);
                 const responseData = await response.json();
-                console.log('Response data:', responseData);
+                console.log('Response:', responseData);
                 
                 if (response.ok) {
-                    showAlert('✅ Заявка успешно отправлена! Мы свяжемся с вами очень скоро!', 'success', 5000);
+                    showAlert('✅ Заявка отправлена! Мы скоро свяжемся!', 'success', 5000);
                     document.getElementById('priceForm').reset();
-                    document.getElementById('priceOutput').textContent = '-';
-                    document.getElementById('priceNote').textContent = '';
+                    ['preview1', 'preview2', 'preview3'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.classList.remove('active');
+                    });
                 } else {
-                    // Handle API errors
-                    let errorMsg = '❌ Ошибка при отправке заявки';
-                    
+                    let errorMsg = '❌ Ошибка при отправке';
                     if (responseData.errors) {
-                        // Extract field-specific errors
                         const errorsList = [];
                         for (const [field, errors] of Object.entries(responseData.errors)) {
                             if (Array.isArray(errors)) {
@@ -1047,17 +1085,16 @@
                             }
                         }
                         if (errorsList.length > 0) {
-                            errorMsg = `❌ Ошибка: ${errorsList.join('; ')}`;
+                            errorMsg = `❌ ${errorsList.join('; ')}`;
                         }
                     } else if (responseData.message) {
                         errorMsg = `❌ ${responseData.message}`;
                     }
-                    
                     showAlert(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showAlert(`❌ Ошибка подключения: ${error.message}`, 'error');
+                showAlert(`❌ Ошибка: ${error.message}`, 'error');
             } finally {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
@@ -1066,7 +1103,7 @@
             }
         });
         
-        // Get CSRF Token from cookies
+        // Get CSRF Token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -1082,7 +1119,7 @@
             return cookieValue;
         }
         
-        // Smooth scroll for anchor links
+        // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
