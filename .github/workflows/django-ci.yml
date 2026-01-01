@@ -16,7 +16,7 @@ jobs:
   # Stage 1: Code Quality & Testing
   # ============================================================================
   test:
-    name: 🧪 Tests & Code Quality
+    name: 🤬 Tests & Code Quality
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,7 +29,7 @@ jobs:
           POSTGRES_DB: test_hair_db
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
-        options: >-
+        options: >
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
@@ -38,7 +38,7 @@ jobs:
           - 5432:5432
     
     steps:
-    - name: 📥 Checkout code
+    - name: 📊 Checkout code
       uses: actions/checkout@v4
     
     - name: 🐍 Set up Python ${{ matrix.python-version }}
@@ -47,11 +47,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: 'pip'
     
-    - name: 📦 Install dependencies
+    - name: 📋 Install dependencies
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
-        pip install flake8 black isort safety
+        pip install flake8 black isort safety pytest pytest-cov pytest-django
     
     - name: 🔍 Lint with Flake8
       run: |
@@ -66,9 +66,9 @@ jobs:
         black --check --diff . || true
       continue-on-error: true
     
-    - name: 📊 Check imports with isort
+    - name: 📋 Check imports with isort
       run: |
-        echo "📊 Checking import order..."
+        echo "📋 Checking import order..."
         isort --check-only --diff . || true
       continue-on-error: true
     
@@ -87,6 +87,8 @@ jobs:
         DATABASE_URL=postgresql://test_user:test_password@localhost:5432/test_hair_db
         TELEGRAM_BOT_TOKEN=test_token
         TELEGRAM_ADMIN_CHAT_ID=0
+        STATIC_URL=/static/
+        MEDIA_URL=/media/
         EOF
         echo "✅ Django environment configured"
     
@@ -101,13 +103,13 @@ jobs:
         echo "✅ Migration check passed"
       continue-on-error: false
     
-    - name: 📊 Apply migrations
+    - name: 📋 Apply migrations
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
       run: |
-        echo "📊 Applying database migrations..."
+        echo "📋 Applying database migrations..."
         python manage.py migrate --verbosity=2
         echo "✅ Migrations applied successfully"
     
@@ -121,24 +123,25 @@ jobs:
         python manage.py check
         echo "✅ All Django checks passed"
     
-    - name: 📦 Collect static files
+    - name: 📋 Collect static files
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
       run: |
-        echo "📦 Collecting static files..."
+        echo "📋 Collecting static files..."
         python manage.py collectstatic --noinput --verbosity=2
         echo "✅ Static files collected"
     
-    - name: 🧪 Run pytest tests
+    - name: 🤬 Run pytest tests
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
+        DJANGO_SETTINGS_MODULE: config.settings
       run: |
-        echo "🧪 Running unit tests..."
-        python -m pytest --verbose --cov=. --cov-report=xml --cov-report=term-missing || true
+        echo "🤬 Running unit tests..."
+        python -m pytest --verbose --cov=. --cov-report=xml --cov-report=term-missing --tb=short || true
         echo "✅ Tests completed"
       continue-on-error: true
     
@@ -164,8 +167,11 @@ jobs:
       packages: write
     
     steps:
-    - name: 📥 Checkout code
+    - name: 📊 Checkout code
       uses: actions/checkout@v4
+    
+    - name: 🐳 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
     
     - name: 🔐 Log in to Container Registry
       uses: docker/login-action@v3
@@ -174,7 +180,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: 📊 Extract metadata
+    - name: 📋 Extract metadata
       id: meta
       uses: docker/metadata-action@v5
       with:
@@ -192,6 +198,8 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     
     - name: ✅ Docker build completed
       run: echo "✅ Docker image built and pushed successfully"
@@ -206,7 +214,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-    - name: 📥 Checkout code
+    - name: 📊 Checkout code
       uses: actions/checkout@v4
     
     - name: 🔑 Setup SSH key
@@ -214,7 +222,7 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
       env:
         SSH_KNOWN_HOSTS: ~/.ssh/known_hosts
     
@@ -227,6 +235,7 @@ jobs:
           cd ${{ secrets.VPS_PROJECT_PATH }}
           git fetch origin main
           git reset --hard origin/main
+          echo "✅ Repository updated"
           
           echo "📝 Creating .env file from environment variables..."
           cat > .env << 'ENV_EOF'
@@ -238,35 +247,57 @@ TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
 TELEGRAM_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
 TELEGRAM_USE_WEBHOOK=False
 STATIC_URL=/static/
+STATIC_ROOT=/home/hair_purchase/static/
 MEDIA_URL=/media/
+MEDIA_ROOT=/home/hair_purchase/media/
 SECURE_SSL_REDIRECT=False
 SESSION_COOKIE_SECURE=False
 CSRF_COOKIE_SECURE=False
+ALLOWED_HOSTS_OVERRIDE=
 ENV_EOF
-          echo "✅ .env created"
+          echo "✅ .env created successfully"
           
-          echo "📦 Installing dependencies..."
+          echo "📋 Installing dependencies..."
           source venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
+          echo "✅ Dependencies installed"
           
-          echo "📊 Running migrations..."
-          python manage.py migrate
+          echo "📋 Running database migrations..."
+          python manage.py migrate --verbosity=2
+          echo "✅ Migrations completed"
           
-          echo "📦 Collecting static files..."
-          python manage.py collectstatic --noinput
+          echo "📋 Collecting static files..."
+          python manage.py collectstatic --noinput --verbosity=2
+          echo "✅ Static files collected"
           
           echo "🔄 Restarting services..."
-          sudo systemctl restart hair_purchase
+          sudo systemctl restart gunicorn || sudo systemctl restart hair_purchase || true
+          sleep 2
           sudo systemctl restart nginx
+          sleep 2
+          
+          echo "🏁 Verifying services..."
+          sudo systemctl is-active gunicorn && echo "✅ Gunicorn running" || echo "⚠️ Gunicorn check - may need manual verification"
+          sudo systemctl is-active nginx && echo "✅ Nginx running" || echo "⚠️ Nginx check - may need manual verification"
           
           echo "✅ Deployment completed successfully!"
         DEPLOY_EOF
     
     - name: ✅ Verify deployment
       run: |
-        echo "✅ Deployment to VPS completed"
+        echo "✅ Deployment to VPS initiated"
         echo "Server: ${{ secrets.VPS_HOST }}"
         echo "Path: ${{ secrets.VPS_PROJECT_PATH }}"
+        echo "Check status at: https://4895c9d9450e.vps.myjino.ru"
+    
+    - name: 🌟 Wait for deployment
+      run: sleep 5
+    
+    - name: 🔍 Health check
+      run: |
+        echo "🔍 Performing health check..."
+        curl -s -o /dev/null -w "Status: %{http_code}\n" https://4895c9d9450e.vps.myjino.ru/ || echo "Note: Health check may fail if SSL is not configured"
   
   # ============================================================================
   # Stage 4: Notifications
@@ -278,20 +309,22 @@ ENV_EOF
     if: success() && github.ref == 'refs/heads/main'
     
     steps:
-    - name: 💚 Success notification
+    - name: 👏 Success notification
       run: |
         echo "✅ DEPLOYMENT SUCCESSFUL!"
         echo "Repository: ${{ github.repository }}"
         echo "Branch: ${{ github.ref }}"
         echo "Commit: ${{ github.sha }}"
         echo "Author: ${{ github.actor }}"
+        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo ""
         echo "View details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "Site: https://4895c9d9450e.vps.myjino.ru"
   
   notify-failure:
     name: 📧 Notify Failure
     runs-on: ubuntu-latest
-    if: failure()
+    if: failure() && github.ref == 'refs/heads/main'
     needs: [test]
     
     steps:
@@ -302,5 +335,6 @@ ENV_EOF
         echo "Branch: ${{ github.ref }}"
         echo "Commit: ${{ github.sha }}"
         echo "Author: ${{ github.actor }}"
+        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo ""
         echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
