@@ -1,0 +1,89 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: 🔍 Python syntax check
+        run: |
+          python -m py_compile $(find . -name "*.py" -type f)
+      
+      - name: ✅ Django system check
+        run: python manage.py check
+      
+      - name: 🧪 Run tests
+        run: python manage.py test --failfast
+        continue-on-error: true
+      
+      - name: 📊 Code statistics
+        run: |
+          echo "=== Code Statistics ==="
+          find . -name "*.py" -type f | wc -l | xargs echo "Python files:"
+          find . -name "*.html" -type f | wc -l | xargs echo "HTML templates:"
+      
+      - name: 🚀 Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            echo "========================================="
+            echo "SSH Connection Established"
+            echo "========================================="
+            
+            cd ${{ secrets.VPS_PROJECT_PATH }} || exit 1
+            
+            echo "Current directory: $(pwd)"
+            echo "Current user: $(whoami)"
+            echo ""
+            
+            echo "Running deployment script..."
+            bash deploy.sh
+            
+            if [ $? -eq 0 ]; then
+              echo ""
+              echo "========================================="
+              echo "✅ Deployment Completed Successfully!"
+              echo "========================================="
+            else
+              echo ""
+              echo "========================================="
+              echo "❌ Deployment Failed!"
+              echo "========================================="
+              exit 1
+            fi
+      
+      - name: ✅ Send success notification
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "Website: https://4895c9d9450e.vps.myjino.ru"
+      
+      - name: ❌ Send failure notification
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check the workflow logs for details"
