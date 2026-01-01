@@ -101,10 +101,10 @@ async def cmd_start(message: types.Message):
 
 @dp.message(Command("queue"))
 async def cmd_queue_applications(message: types.Message):
-    """Показать все незавершённые заявки (новые, просмотренные, принятые)"""
+    """Показать все незавершённые заявки с фотографиями (новые, просмотренные, принятые)"""
     @sync_to_async
     def get_pending_apps():
-        # Восюде кроме completed и rejected
+        # Все кроме completed и rejected
         return list(HairApplication.objects.exclude(
             status__in=['completed', 'rejected']
         ).order_by('-created_at'))
@@ -130,11 +130,62 @@ async def cmd_queue_applications(message: types.Message):
     
     await message.answer(summary)
     
-    # Отправляем каждую заявку отдельным сообщением
+    # Отправляем каждую заявку отдельным сообщением с фотографиями
     for app in pending_apps:
         text = format_application_full(app)
         keyboard = get_application_keyboard(app.id, app.status)
-        await message.answer(text, reply_markup=keyboard)
+        
+        # Получаем список фотографий
+        photo_files = []
+        photo_fields = ['photo1', 'photo2', 'photo3']
+        
+        for field_name in photo_fields:
+            photo_field = getattr(app, field_name, None)
+            if photo_field and photo_field.name:
+                try:
+                    file_path = photo_field.path
+                    if os.path.exists(file_path):
+                        photo_files.append({
+                            'path': file_path,
+                            'number': field_name[-1]
+                        })
+                except Exception as e:
+                    logger.error(f"Ошибка при проверке фото {field_name} для заявки #{app.id}: {e}")
+        
+        # Если есть фотографии - отправляем их группой
+        if photo_files:
+            try:
+                media_group = []
+                for idx, photo_info in enumerate(photo_files):
+                    caption = text if idx == 0 else None  # Текст заявки на первом фото
+                    media_group.append(
+                        types.InputMediaPhoto(
+                            media=types.FSInputFile(photo_info['path']),
+                            caption=caption
+                        )
+                    )
+                
+                # Отправляем медиа-группу
+                await bot.send_media_group(
+                    chat_id=message.chat.id,
+                    media=media_group
+                )
+                
+                # Отправляем кнопки отдельным сообщением
+                await message.answer(
+                    f"<b>Заявка #{app.id}</b> - выберите действие:",
+                    reply_markup=keyboard
+                )
+                
+                logger.info(f"Заявка #{app.id}: отправлено {len(photo_files)} фото + данные")
+            except Exception as e:
+                logger.error(f"Ошибка при отправке медиа-группы для заявки #{app.id}: {e}")
+                # Если ошибка - отправляем просто текст и кнопки
+                await message.answer(text, reply_markup=keyboard)
+        else:
+            # Если фотографий нет - отправляем просто текст и кнопки
+            await message.answer(text, reply_markup=keyboard)
+        
         await asyncio.sleep(0.1)  # Короткая задержка для Telegram
 
 @dp.message(Command("all"))
@@ -400,7 +451,7 @@ async def send_new_application_notification(app_id: int):
             return
         
         text = (
-            "🔔 <b>НОВАЙ ЗАЯВКА!</b>\n\n"
+            "🔔 <b>НОВАЯ ЗАЯВКА!</b>\n\n"
             + format_application_full(app)
         )
         
