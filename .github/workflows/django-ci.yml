@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 env:
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.12'
   NODE_VERSION: '18'
   REGISTRY: ghcr.io
 
@@ -220,13 +220,30 @@ jobs:
     
     - name: 🚀 Deploy via SSH
       run: |
-        ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+        ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'DEPLOY_EOF'
           set -e
           
           echo "🔄 Updating repository..."
           cd ${{ secrets.VPS_PROJECT_PATH }}
           git fetch origin main
           git reset --hard origin/main
+          
+          echo "📝 Creating .env file from environment variables..."
+          cat > .env << 'ENV_EOF'
+DEBUG=False
+SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+ALLOWED_HOSTS=195.161.69.221,localhost,127.0.0.1
+DATABASE_URL=postgresql://hair_user:hair_secure_password@localhost:5432/hair_db
+TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+TELEGRAM_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+TELEGRAM_USE_WEBHOOK=False
+STATIC_URL=/static/
+MEDIA_URL=/media/
+SECURE_SSL_REDIRECT=False
+SESSION_COOKIE_SECURE=False
+CSRF_COOKIE_SECURE=False
+ENV_EOF
+          echo "✅ .env created"
           
           echo "📦 Installing dependencies..."
           source venv/bin/activate
@@ -243,7 +260,7 @@ jobs:
           sudo systemctl restart nginx
           
           echo "✅ Deployment completed successfully!"
-        EOF
+        DEPLOY_EOF
     
     - name: ✅ Verify deployment
       run: |
