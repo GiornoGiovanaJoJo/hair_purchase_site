@@ -13,6 +13,13 @@ class HairApplicationSerializer(serializers.ModelSerializer):
     Serializer for hair applications.
     """
     
+    # 🔧 EXPLICIT CHOICE FIELD VALIDATION for all choice fields
+    length = serializers.ChoiceField(choices=HairApplication.LENGTH_CHOICES)
+    color = serializers.ChoiceField(choices=HairApplication.COLOR_CHOICES)
+    structure = serializers.ChoiceField(choices=HairApplication.STRUCTURE_CHOICES)
+    age = serializers.ChoiceField(choices=HairApplication.AGE_CHOICES, required=False, allow_blank=True)
+    condition = serializers.ChoiceField(choices=HairApplication.CONDITION_CHOICES)
+    
     # 🔧 CRITICAL FIX: photo2 and photo3 should allow empty (not provide them if empty)
     photo2 = serializers.ImageField(required=False, allow_null=True)
     photo3 = serializers.ImageField(required=False, allow_null=True)
