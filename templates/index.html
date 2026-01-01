@@ -1093,23 +1093,35 @@
         document.getElementById('priceForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Prepare JSON data
-            const jsonData = {
-                color: document.getElementById('hairColor').value,
-                length: document.getElementById('hairLength').value,
-                structure: document.getElementById('hairStructure').value,
-                age: document.getElementById('hairAge').value,
-                condition: document.getElementById('hairCondition').value,
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value || null,
-                city: document.getElementById('city').value || null,
-                comment: document.getElementById('comment').value || null
-            };
+            // 🔧 USE FormData FOR FILE UPLOAD!
+            const formData = new FormData();
+            
+            // Add all regular fields
+            formData.append('color', document.getElementById('hairColor').value);
+            formData.append('length', document.getElementById('hairLength').value);
+            formData.append('structure', document.getElementById('hairStructure').value);
+            formData.append('age', document.getElementById('hairAge').value);
+            formData.append('condition', document.getElementById('hairCondition').value);
+            formData.append('name', document.getElementById('name').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('email', document.getElementById('email').value || '');
+            formData.append('city', document.getElementById('city').value || '');
+            formData.append('comment', document.getElementById('comment').value || '');
+            
+            // 🔧 ONLY APPEND PHOTOS IF THEY EXIST!
+            const photo1 = document.getElementById('photo1').files[0];
+            const photo2 = document.getElementById('photo2').files[0];
+            const photo3 = document.getElementById('photo3').files[0];
+            
+            if (photo1) formData.append('photo1', photo1);
+            if (photo2) formData.append('photo2', photo2);
+            if (photo3) formData.append('photo3', photo3);
             
             // Validate required fields
-            if (!jsonData.color || !jsonData.length || !jsonData.structure || !jsonData.age || !jsonData.condition || !jsonData.name || !jsonData.phone) {
-                showAlert('❌ Заполните все обязательные поля!', 'error');
+            if (!formData.get('color') || !formData.get('length') || !formData.get('structure') || 
+                !formData.get('age') || !formData.get('condition') || !formData.get('name') || 
+                !formData.get('phone') || !photo1) {
+                showAlert('❌ Заполните все обязательные поля и загрузите минимум 1 фото!', 'error');
                 return;
             }
             
@@ -1123,15 +1135,15 @@
             submitSpinner.style.display = 'inline-block';
             
             try {
-                console.log('Sending:', jsonData);
+                console.log('Sending FormData with files...');
                 
                 const response = await fetch('/api/applications/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
+                        // NOTE: DO NOT SET Content-Type! Browser will set it with boundary
                     },
-                    body: JSON.stringify(jsonData)
+                    body: formData
                 });
                 
                 console.log('Status:', response.status);
