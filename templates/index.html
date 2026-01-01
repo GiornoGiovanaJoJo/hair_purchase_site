@@ -25,9 +25,9 @@
     <link rel="alternate" hreflang="ru" href="https://4895c9d9450e.vps.myjino.ru/" />
     
     <!-- Performance Optimization -->
-    <link rel="preload" as="image" href="/static/images/hero.jpg" media="(min-width: 1024px)">
-    <link rel="preload" as="image" href="/static/images/hero.jpg" media="(max-width: 1023px)">
-    <link rel="prefetch" href="/static/css/style.css">
+    <link rel="preload" as="image" href="{% static 'images/hero.jpg' %}" media="(min-width: 1024px)">
+    <link rel="preload" as="image" href="{% static 'images/hero.jpg' %}" media="(max-width: 1023px)">
+    <link rel="prefetch" href="{% static 'css/style.css' %}">
     <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     <link rel="dns-prefetch" href="https://www.google-analytics.com">
     <link rel="dns-prefetch" href="https://mc.yandex.ru">
@@ -42,7 +42,7 @@
     {% endblock %}
     
     <!-- Scripts -->
-    <script src="{% static 'js/script.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
