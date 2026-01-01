@@ -1,71 +1,48 @@
 #!/bin/bash
-# Быстрое распределение всех исправлений
 
-set -e  # Остановиться при ошибке
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-echo "✋ НАЧИНАЕМ РАСПРЕДЕЛЕНИЕ фиксов..."
+PROJECT_PATH="/opt/hair_purchase_site"
 
-# 1. Обновить код
-echo "✍️  Шаг 1: Обновление кода..."
-git pull origin main
-echo "✅ Код обновлен!"
+echo -e "${YELLOW}🚀 Starting deployment...${NC}"
 
-# 2. Показать актуальные коммиты
-echo ""
-echo "🔗 Примененные коммиты:"
-git log --oneline | head -5
+cd "$PROJECT_PATH" || exit 1
 
-# 3. Перезагружить Django
-echo ""
-echo "✍️  Шаг 2: Перезагрузка Django..."
+# Activate virtual environment
+echo -e "${YELLOW}[0/5] Activating virtual environment...${NC}"
+source venv/bin/activate || exit 1
+echo -e "${GREEN}✅ Venv activated${NC}"
 
-# Проверяем если служба systemd
-if sudo systemctl status hair-purchase &> /dev/null; then
-    echo "🔄 Перезагружаем systemd службу..."
-    sudo systemctl restart hair-purchase
-    echo "✅ Systemd перезагружен!"
-else
-    echo "🔄 Перезагружаем gunicorn..."
-    pkill -f gunicorn || true
-    sleep 2
-    source venv/bin/activate 2>/dev/null || true
-    nohup gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 > /tmp/gunicorn.log 2>&1 &
-    echo "✅ Gunicorn перезагружен!"
-fi
+# 1. Git pull with GIT_TERMINAL_PROMPT=0 to prevent password prompt
+echo -e "${YELLOW}[1/5] Pulling code...${NC}"
+GIT_TERMINAL_PROMPT=0 git fetch origin main || exit 1
+GIT_TERMINAL_PROMPT=0 git reset --hard origin/main || exit 1
+echo -e "${GREEN}✅ Code pulled${NC}"
 
-# 4. Ожидание
-echo ""
-echo "⏳ Небольшое ожидание (3 сек)..."
-sleep 3
+# 2. Django check
+echo -e "${YELLOW}[2/5] Django check...${NC}"
+python manage.py check || exit 1
+echo -e "${GREEN}✅ Django OK${NC}"
 
-# 5. Проверка статуса
-echo ""
-echo "✍️  Шаг 3: Проверка статуса..."
+# 3. Migrate
+echo -e "${YELLOW}[3/5] Running migrations...${NC}"
+python manage.py migrate --noinput || exit 1
+echo -e "${GREEN}✅ Migrations done${NC}"
 
-if sudo systemctl status hair-purchase &> /dev/null 2>&1; then
-    echo "✅ Сервис работает!"
-    echo ""
-    echo "📄 Последние логи:"
-    journalctl -u hair-purchase -n 10 --no-pager
-else
-    echo "⚠️  Не удалось сразу. Проверяю..."
-    sleep 3
-    if sudo systemctl status hair-purchase &> /dev/null 2>&1; then
-        echo "✅ Нынче работает!"
-    else
-        echo "❌ Ошибка! Проверьте логи:"
-        journalctl -u hair-purchase -n 20 --no-pager
-        exit 1
-    fi
-fi
+# 4. Collectstatic
+echo -e "${YELLOW}[4/5] Collecting static files...${NC}"
+python manage.py collectstatic --noinput --clear || exit 1
+echo -e "${GREEN}✅ Static files collected${NC}"
 
-echo ""
-echo "🎉 ВСЕ ГОТОВО!"
-echo ""
-echo "🌐 Проверьте сайт:"
-echo "   https://4895c9d9450e.vps.myjino.ru/"
-echo ""
-echo "📄 Документация:"
-echo "   - BUG_FIX_100_PLUS.md (исправление для 100+ см)"
-echo "   - DEPLOYMENT_INSTRUCTIONS.md (инструкции)"
-echo ""
+# 5. Restart services
+echo -e "${YELLOW}[5/5] Restarting services...${NC}"
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+echo -e "${GREEN}✅ Services restarted${NC}"
+
+echo -e "${GREEN}🎉 Deployment completed!${NC}"
+exit 0
