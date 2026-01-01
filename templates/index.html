@@ -732,18 +732,23 @@
                     <label for="hairColor">Цвет волос</label>
                     <select id="hairColor" name="hair_color" required>
                         <option value="">Выберите цвет...</option>
-                        <option value="blonde">Блонд</option>
-                        <option value="dark_blonde">Тёмный блонд</option>
-                        <option value="light_brown">Светло-коричневый</option>
-                        <option value="brown">Коричневый</option>
-                        <option value="dark_brown">Тёмно-коричневый</option>
-                        <option value="black">Чёрный</option>
+                        <option value="блонд">Блонд (светлые)</option>
+                        <option value="светло-русые">Светло-русые</option>
+                        <option value="русые">Русые</option>
+                        <option value="шатены">Шатены</option>
+                        <option value="брюнеты">Брюнеты</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="hairLength">Длина волос (см)</label>
-                    <input type="number" id="hairLength" name="hair_length" min="40" max="150" placeholder="Например: 60" required>
+                    <label for="hairLength">Длина волос</label>
+                    <select id="hairLength" name="hair_length" required>
+                        <option value="">Выберите длину...</option>
+                        <option value="40-50">40-50 см</option>
+                        <option value="50-60">50-60 см</option>
+                        <option value="60-80">60-80 см</option>
+                        <option value="80+">80+ см</option>
+                    </select>
                 </div>
             </div>
             
@@ -752,9 +757,9 @@
                     <label for="hairStructure">Структура волос</label>
                     <select id="hairStructure" name="hair_structure" required>
                         <option value="">Выберите структуру...</option>
-                        <option value="slavyanka">Славянка (премиум)</option>
-                        <option value="european">Европейка</option>
-                        <option value="asian">Азиатская</option>
+                        <option value="славянка">Славянка (тонкие)</option>
+                        <option value="среднее">Средние</option>
+                        <option value="густые">Густые</option>
                     </select>
                 </div>
                 
@@ -762,17 +767,21 @@
                     <label for="hairCondition">Состояние</label>
                     <select id="hairCondition" name="hair_condition" required>
                         <option value="">Выберите состояние...</option>
-                        <option value="excellent">Отличное (натуральные)</option>
-                        <option value="good">Хорошее</option>
-                        <option value="fair">Удовлетворительное</option>
+                        <option value="натуральные">Натуральные (не окрашенные)</option>
+                        <option value="окрашенные">Окрашенные</option>
+                        <option value="после химии">После химической завивки</option>
                     </select>
                 </div>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="hairAge">Возраст волос (месяцев)</label>
-                    <input type="number" id="hairAge" name="hair_age" min="0" max="120" placeholder="Выстриженные: 0, в росте: 1-36" value="0" required>
+                    <label for="hairAge">Возраст волос</label>
+                    <select id="hairAge" name="hair_age" required>
+                        <option value="">Выберите возраст...</option>
+                        <option value="детские">Детские (до 14 лет)</option>
+                        <option value="взрослые">Взрослые (14+ лет)</option>
+                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -982,15 +991,15 @@
         // Calculate Price Function
         async function calculatePrice() {
             const colorSelect = document.getElementById('hairColor');
-            const lengthInput = document.getElementById('hairLength');
+            const lengthSelect = document.getElementById('hairLength');
             const structureSelect = document.getElementById('hairStructure');
-            const ageInput = document.getElementById('hairAge');
+            const ageSelect = document.getElementById('hairAge');
             const conditionSelect = document.getElementById('hairCondition');
             const priceOutput = document.getElementById('priceOutput');
             const priceNote = document.getElementById('priceNote');
             
             // Check if all required fields are filled
-            if (!colorSelect.value || !lengthInput.value || !structureSelect.value || !conditionSelect.value) {
+            if (!colorSelect.value || !lengthSelect.value || !structureSelect.value || !ageSelect.value || !conditionSelect.value) {
                 priceOutput.textContent = '-';
                 priceNote.textContent = '';
                 return;
@@ -999,9 +1008,9 @@
             try {
                 const payload = {
                     color: colorSelect.value,
-                    length: parseInt(lengthInput.value),
+                    length: lengthSelect.value,
                     structure: structureSelect.value,
-                    age: parseInt(ageInput.value) || 0,
+                    age: ageSelect.value,
                     condition: conditionSelect.value
                 };
                 
@@ -1087,9 +1096,9 @@
             // Prepare JSON data
             const jsonData = {
                 color: document.getElementById('hairColor').value,
-                length: parseInt(document.getElementById('hairLength').value),
+                length: document.getElementById('hairLength').value,
                 structure: document.getElementById('hairStructure').value,
-                age: parseInt(document.getElementById('hairAge').value) || 0,
+                age: document.getElementById('hairAge').value,
                 condition: document.getElementById('hairCondition').value,
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
@@ -1099,7 +1108,7 @@
             };
             
             // Validate required fields
-            if (!jsonData.color || !jsonData.length || !jsonData.structure || !jsonData.condition || !jsonData.name || !jsonData.phone) {
+            if (!jsonData.color || !jsonData.length || !jsonData.structure || !jsonData.age || !jsonData.condition || !jsonData.name || !jsonData.phone) {
                 showAlert('❌ Заполните все обязательные поля!', 'error');
                 return;
             }
@@ -1197,9 +1206,9 @@
         
         // Add event listeners for price calculation
         document.getElementById('hairColor').addEventListener('change', calculatePrice);
-        document.getElementById('hairLength').addEventListener('input', calculatePrice);
+        document.getElementById('hairLength').addEventListener('change', calculatePrice);
         document.getElementById('hairStructure').addEventListener('change', calculatePrice);
-        document.getElementById('hairAge').addEventListener('input', calculatePrice);
+        document.getElementById('hairAge').addEventListener('change', calculatePrice);
         document.getElementById('hairCondition').addEventListener('change', calculatePrice);
     </script>
 </body>
