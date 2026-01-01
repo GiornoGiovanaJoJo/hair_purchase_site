@@ -181,7 +181,7 @@ async def cmd_stats(message: types.Message):
         f"🕴 Просмотрено: <b>{stats['viewed']}</b>\n"
         f"✅ Принято: <b>{stats['accepted']}</b>\n"
         f"🎉 Завершено: <b>{stats['completed']}</b>\n"
-        f❌ Отклонено: <b>{stats['rejected']}</b>"
+        f"❌ Отклонено: <b>{stats['rejected']}</b>"
     )
     
     await message.answer(text)
