@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /static/admin/
+Disallow: /django-admin/
+Disallow: /*.json$
+Disallow: /temp/
+Disallow: /cache/
+
+# Позволяем Googlebot
+User-agent: Googlebot
+Allow: /
+
+# Позволяем Yandexbot
+User-agent: Yandexbot
+Allow: /
+
+# Замедление для агрессивных ботов
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Карта сайта
+Sitemap: https://4895c9d9450e.vps.myjino.ru/sitemap.xml
+Sitemap: https://4895c9d9450e.vps.myjino.ru/sitemap-ru.xml
