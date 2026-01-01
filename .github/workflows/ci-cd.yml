@@ -87,7 +87,7 @@ jobs:
         VPS_HOST: ${{ secrets.VPS_HOST }}
         VPS_USER: ${{ secrets.VPS_USER }}
       run: |
-        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=5 $VPS_USER@$VPS_HOST "echo 'SSH connection successful'"
+        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=5 $VPS_USER@$VPS_HOST "echo SSH connection successful"
     
     - name: Deploy
       env:
@@ -110,31 +110,31 @@ git status || (echo "Not a git repository" && exit 1)
 echo "Step 1: Updating repository..."
 git fetch origin main
 git reset --hard origin/main
-echo "✓ Repository updated"
+echo "[OK] Repository updated"
 
 echo "Step 2: Activating virtual environment..."
 [ -d venv ] || (echo "venv not found" && exit 1)
 source venv/bin/activate
-echo "✓ Virtual environment activated"
+echo "[OK] Virtual environment activated"
 
 echo "Step 3: Installing dependencies..."
 pip install --upgrade pip --quiet
 pip install -r requirements.txt --quiet
-echo "✓ Dependencies installed"
+echo "[OK] Dependencies installed"
 
 echo "Step 4: Running migrations..."
 python manage.py migrate --verbosity=1 || true
-echo "✓ Migrations completed"
+echo "[OK] Migrations completed"
 
 echo "Step 5: Collecting static files..."
 python manage.py collectstatic --noinput --quiet || true
-echo "✓ Static files collected"
+echo "[OK] Static files collected"
 
 echo "Step 6: Restarting services..."
-sudo systemctl restart gunicorn 2>/dev/null || echo "⚠ Could not restart gunicorn"
+sudo systemctl restart gunicorn 2>/dev/null || echo "[WARN] Could not restart gunicorn"
 sleep 2
-sudo systemctl restart nginx 2>/dev/null || echo "⚠ Could not restart nginx"
-echo "✓ Services restarted"
+sudo systemctl restart nginx 2>/dev/null || echo "[WARN] Could not restart nginx"
+echo "[OK] Services restarted"
 
 echo ""
 echo "Deployment completed successfully!"
@@ -146,14 +146,14 @@ DEPLOY_EOF
     - name: Health check
       run: |
         echo "Performing health check..."
-        curl -s -o /dev/null -w "Status: %{http_code}\n" https://4895c9d9450e.vps.myjino.ru/ || echo "Health check completed"
+        curl -s -o /dev/null -w "Status: %{http_code}" https://4895c9d9450e.vps.myjino.ru/ || echo "Health check completed"
       continue-on-error: true
     
     - name: Success
       if: success()
       run: |
         echo ""
-        echo "✅ CI/CD PIPELINE SUCCESSFUL!"
+        echo "SUCCESS: CI/CD PIPELINE COMPLETED"
         echo "Repository: ${{ github.repository }}"
         echo "Commit: ${{ github.sha }}"
         echo "Author: ${{ github.actor }}"
@@ -163,6 +163,6 @@ DEPLOY_EOF
       if: failure()
       run: |
         echo ""
-        echo "❌ CI/CD PIPELINE FAILED"
+        echo "FAILED: CI/CD PIPELINE"
         echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         exit 1
