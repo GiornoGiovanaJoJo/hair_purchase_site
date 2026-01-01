@@ -1,48 +1,1014 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hair Purchase Site{% endblock %}</title>
+    <title>Hair Purchase - Скупка волос в Москве | 5000-50000 ₽</title>
+    <meta name="description" content="Профессиональная скупка натуральных волос в Москве. Лучшие цены от 5000 до 50000 ₽. Срочный расчет, честные условия.">
+    <meta name="keywords" content="скупка волос, купить волосы, цена волос, волосы для наращивания">
+    <meta property="og:title" content="Hair Purchase - Скупка волос в Москве">
+    <meta property="og:description" content="Лучшие цены на волосы. От 5000 до 50000 ₽">
+    <meta property="og:type" content="website">
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E4CZCZ0HG5"></script>
+    <!-- Preload критичных ресурсов -->
+    <link rel="preload" as="image" href="/static/images/hero.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-E4CZC2BMW5"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-E4CZCZ0HG5');
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-E4CZC2BMW5', {
+            'page_path': window.location.pathname,
+            'anonymize_ip': true
+        });
     </script>
-
-    <!-- Meta Tags for SEO -->
-    <meta name="description" content="Professional hair purchase and styling services">
-    <meta name="keywords" content="hair, purchase, styling">
-    <meta name="author" content="Hair Purchase Site">
     
-    <!-- Canonical -->
-    <link rel="canonical" href="https://4895c9d9450e.vps.myjino.ru/" />
-    <link rel="alternate" hreflang="ru" href="https://4895c9d9450e.vps.myjino.ru/" />
+    <!-- Schema.org разметка -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Hair Purchase",
+        "image": "https://4895c9d9450e.vps.myjino.ru/static/images/hero.jpg",
+        "description": "Скупка натуральных волос в Москве",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Москва",
+            "addressLocality": "Москва",
+            "addressCountry": "RU"
+        },
+        "telephone": "+7-999-999-99-99",
+        "url": "https://4895c9d9450e.vps.myjino.ru",
+        "priceRange": "RUB5000RUB50000"
+    }
+    </script>
     
-    <!-- Performance Optimization -->
-    <link rel="preload" as="image" href="{% static 'images/hero.jpg' %}" media="(min-width: 1024px)">
-    <link rel="preload" as="image" href="{% static 'images/hero.jpg' %}" media="(max-width: 1023px)">
-    <link rel="prefetch" href="{% static 'css/style.css' %}">
-    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
-    <link rel="dns-prefetch" href="https://www.google-analytics.com">
-    <link rel="dns-prefetch" href="https://mc.yandex.ru">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Какие волосы вы принимаете?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Натуральные волосы длиной от 40 см без повреждений и секущихся концов"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Сколько стоят волосы?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "От 5000 до 50000 ₽ в зависимости от длины, цвета и состояния"
+                }
+            }
+        ]
+    }
+    </script>
     
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    {% block extra_css %}{% endblock %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --accent: #f59e0b;
+            --accent-dark: #d97706;
+            --success: #10b981;
+            --error: #ef4444;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #f9fafb;
+            --border: #e5e7eb;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+            overflow-x: hidden;
+        }
+        
+        /* === HEADER === */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .header-phone {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .header-phone:hover {
+            color: var(--accent-dark);
+        }
+        
+        /* === HERO SECTION === */
+        .hero {
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(30, 58, 138, 0.95) 100%), 
+                        url('/static/images/hero.jpg') center/cover;
+            background-attachment: fixed;
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(245, 158, 11, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            animation: slideInDown 0.8s ease-out;
+        }
+        
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 40px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: var(--text);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg);
+            transform: translateY(-2px);
+        }
+        
+        /* === SECTION STYLES === */
+        section {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
+            color: var(--primary);
+        }
+        
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        /* === CALCULATOR === */
+        .calculator {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .price-display {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .price-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .price-value {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+        
+        .price-note {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        
+        .btn-calculate {
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px;
+            font-size: 18px;
+        }
+        
+        /* === GALLERY === */
+        .gallery {
+            background: white;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .gallery-item {
+            background: var(--bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+        }
+        
+        .gallery-content {
+            padding: 20px;
+        }
+        
+        .gallery-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .gallery-desc {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+        
+        .gallery-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 12px;
+        }
+        
+        /* === HOW TO SELL === */
+        .how-to {
+            background: white;
+        }
+        
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .step {
+            text-align: center;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+        
+        .step h3 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        
+        .step p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        /* === FAQ === */
+        .faq {
+            background: var(--bg);
+        }
+        
+        .faq-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .faq-question {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text);
+            transition: background 0.3s;
+        }
+        
+        .faq-question:hover {
+            background: var(--bg);
+        }
+        
+        .faq-toggle {
+            font-size: 24px;
+            transition: transform 0.3s;
+        }
+        
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 20px;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 20px 20px;
+        }
+        
+        .faq-answer p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        /* === CONTACT CTA === */
+        .contact-cta {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .contact-cta h2 {
+            font-size: 42px;
+            margin-bottom: 20px;
+        }
+        
+        .contact-cta p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .contact-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .contact-link {
+            background: var(--accent);
+            color: var(--text);
+            padding: 16px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .contact-link:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+        
+        /* === FOOTER === */
+        footer {
+            background: var(--text);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-links {
+            margin: 20px 0;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-link:hover {
+            color: var(--accent);
+        }
+        
+        /* === ANIMATIONS === */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .hero {
+                padding: 50px 20px;
+            }
+            
+            .hero h1 {
+                font-size: 32px;
+            }
+            
+            .calculator {
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 28px;
+            }
+            
+            .contact-cta h2 {
+                font-size: 28px;
+            }
+            
+            .contact-links {
+                flex-direction: column;
+            }
+            
+            .contact-link {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        /* === LOADING STATE === */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            display: inline-block;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    {% block content %}
-    <!-- Main content goes here -->
-    {% endblock %}
+    <!-- HEADER -->
+    <header>
+        <div class="header-container">
+            <div class="logo">💇 Hair Purchase</div>
+            <a href="tel:+79999999999" class="header-phone">+7 (999) 999-99-99</a>
+        </div>
+    </header>
     
-    <!-- Scripts -->
-    <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
+    <!-- HERO SECTION -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <h1>Скупка Натуральных Волос</h1>
+            <p>Лучшие цены в Москве</p>
+            <div class="hero-subtitle">💰 От 5,000 до 50,000 ₽</div>
+            <button class="btn btn-primary" onclick="document.getElementById('calculator').scrollIntoView({behavior: 'smooth'})">Рассчитать стоимость</button>
+        </div>
+    </section>
+    
+    <!-- CALCULATOR -->
+    <section class="calculator" id="calculator">
+        <h2 style="text-align: center; margin-bottom: 30px; color: var(--primary);">Калькулятор Цены</h2>
+        
+        <form id="priceForm" onsubmit="calculatePrice(event)">
+            <div class="form-group">
+                <label for="hairColor">Цвет волос</label>
+                <select id="hairColor" required>
+                    <option value="">Выберите цвет...</option>
+                    <option value="blonde">Блонд</option>
+                    <option value="dark_blonde">Тёмный блонд</option>
+                    <option value="light_brown">Светло-коричневый</option>
+                    <option value="brown">Коричневый</option>
+                    <option value="dark_brown">Тёмно-коричневый</option>
+                    <option value="black">Чёрный</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="hairLength">Длина волос (см)</label>
+                <input type="number" id="hairLength" min="40" max="150" placeholder="Например: 60" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="hairCondition">Состояние волос</label>
+                <select id="hairCondition" required>
+                    <option value="">Выберите состояние...</option>
+                    <option value="excellent">Отличное (натуральные)</option>
+                    <option value="good">Хорошее (легкие повреждения)</option>
+                    <option value="fair">Удовлетворительное (окрашенные)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="hairWeight">Примерный вес волос (г)</label>
+                <input type="number" id="hairWeight" min="20" max="500" placeholder="Например: 100" required>
+            </div>
+            
+            <div class="price-display">
+                <div class="price-label">Ожидаемая стоимость</div>
+                <div class="price-value" id="priceOutput">-</div>
+                <div class="price-note" id="priceNote"></div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-calculate">
+                <span id="submitText">Отправить заявку</span>
+                <span id="submitSpinner" class="spinner" style="display: none;"></span>
+            </button>
+        </form>
+    </section>
+    
+    <!-- GALLERY -->
+    <section class="gallery" id="gallery">
+        <h2 class="section-title">Примеры волос</h2>
+        <p class="section-subtitle">Волосы разных цветов и состояний которые мы скупаем</p>
+        
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <div class="gallery-image">👰</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Блонд натуральный</div>
+                    <div class="gallery-desc">Славянка, длина 60+ см, отличное состояние</div>
+                    <div class="gallery-price">35,000 - 50,000 ₽</div>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <div class="gallery-image">🤎</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Коричневые волосы</div>
+                    <div class="gallery-desc">Натуральный цвет, 50-60 см, без повреждений</div>
+                    <div class="gallery-price">20,000 - 30,000 ₽</div>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <div class="gallery-image">🖤</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Чёрные волосы</div>
+                    <div class="gallery-desc">Толстая структура, 45-55 см, хорошее состояние</div>
+                    <div class="gallery-price">15,000 - 25,000 ₽</div>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <div class="gallery-image">✨</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Светлый блонд</div>
+                    <div class="gallery-desc">Редкий цвет, 70+ см, отличное состояние</div>
+                    <div class="gallery-price">40,000 - 50,000 ₽</div>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <div class="gallery-image">🌟</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Волосы после окрашивания</div>
+                    <div class="gallery-desc">Окрашенные волосы, 40-50 см</div>
+                    <div class="gallery-price">8,000 - 15,000 ₽</div>
+                </div>
+            </div>
+            
+            <div class="gallery-item">
+                <div class="gallery-image">💎</div>
+                <div class="gallery-content">
+                    <div class="gallery-title">Премиум волосы</div>
+                    <div class="gallery-desc">Длина 80+ см, натуральный блонд</div>
+                    <div class="gallery-price">45,000 - 50,000 ₽</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- HOW TO SELL -->
+    <section class="how-to" id="how-to">
+        <h2 class="section-title">Как продать волосы?</h2>
+        <p class="section-subtitle">Простые шаги для безопасной и выгодной продажи</p>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Подготовка</h3>
+                <p>Вымойте волосы за 1-2 дня до встречи, высушите и расчешите. Срежьте ровным срезом.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Упаковка</h3>
+                <p>Завяжите волосы в хвост или косу тонкой резинкой. Упакуйте в целлофан или пакет.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Расчет</h3>
+                <p>Используйте наш калькулятор или напишите нам. Мы проверим качество и выставим итоговую цену.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Встреча</h3>
+                <p>Встречаемся в Москве. Проверяем волосы, подтверждаем цену и выплачиваем деньги наличными.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+        <h2 class="section-title">Часто задаваемые вопросы</h2>
+        
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Какие волосы вы принимаете?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Мы принимаем натуральные волосы длиной от 40 см без видимых повреждений и секущихся концов. Волосы должны быть чистыми и сухими.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Сколько стоят волосы?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Цена зависит от длины, цвета, состояния и веса волос. В среднем от 5,000 до 50,000 ₽. Используйте наш калькулятор для точной оценки.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Какой вес волос нужен?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Обычно волосы длиной 60 см весят 80-120 грамм. Чем толще и плотнее волосы, тем больше вес. Минимум 30-50 грамм для скупки.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Можно ли продать окрашенные волосы?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Да, но цена будет ниже. Натуральные волосы ценятся больше, чем окрашенные. Однако окрашенные волосы также принимаем по справедливой цене.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Как происходит встреча?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Встречаемся в Москве в безопасном месте. Проверяем волосы, подтверждаем цену и выплачиваем деньги наличными прямо на месте. Никаких скрытых комиссий.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <span>Как быстро получу деньги?</span>
+                    <span class="faq-toggle">▼</span>
+                </div>
+                <div class="faq-answer">
+                    <p>Деньги выплачиваются сразу же на встрече наличными. Никаких задержек и переводов. Все честно и прозрачно.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CONTACT CTA -->
+    <section class="contact-cta" id="contact">
+        <h2>Готовы продать волосы?</h2>
+        <p>Свяжитесь с нами прямо сейчас и получите честную оценку</p>
+        
+        <div class="contact-links">
+            <a href="https://t.me/hair-purchase-bot" class="contact-link" target="_blank">📱 Telegram</a>
+            <a href="https://wa.me/79999999999" class="contact-link" target="_blank">💬 WhatsApp</a>
+            <a href="tel:+79999999999" class="contact-link">📞 Позвонить</a>
+        </div>
+    </section>
+    
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 Hair Purchase. Скупка натуральных волос в Москве.</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Политика конфиденциальности</a>
+                <a href="#" class="footer-link">Условия использования</a>
+                <a href="#" class="footer-link">Контакты</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // FAQ Toggle
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentElement;
+                item.classList.toggle('active');
+            });
+        });
+        
+        // Price Calculator
+        const priceMultipliers = {
+            'blonde': 1.8,
+            'dark_blonde': 1.6,
+            'light_brown': 1.4,
+            'brown': 1.3,
+            'dark_brown': 1.2,
+            'black': 1.1
+        };
+        
+        const conditionMultipliers = {
+            'excellent': 1.0,
+            'good': 0.8,
+            'fair': 0.6
+        };
+        
+        const basePrice = 80; // ₽ за грамм
+        
+        function updatePrice() {
+            const color = document.getElementById('hairColor').value;
+            const weight = parseFloat(document.getElementById('hairWeight').value) || 0;
+            const condition = document.getElementById('hairCondition').value;
+            
+            if (!color || !condition || weight === 0) {
+                document.getElementById('priceOutput').textContent = '-';
+                document.getElementById('priceNote').textContent = '';
+                return;
+            }
+            
+            const colorMult = priceMultipliers[color] || 1;
+            const condMult = conditionMultipliers[condition] || 1;
+            const price = Math.round(basePrice * weight * colorMult * condMult);
+            
+            document.getElementById('priceOutput').textContent = price.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('priceNote').textContent = `Примерная стоимость (${weight}г волос ${color})`;
+        }
+        
+        document.getElementById('hairColor').addEventListener('change', updatePrice);
+        document.getElementById('hairWeight').addEventListener('input', updatePrice);
+        document.getElementById('hairCondition').addEventListener('change', updatePrice);
+        
+        // Form Submit
+        document.getElementById('priceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const color = document.getElementById('hairColor').value;
+            const length = document.getElementById('hairLength').value;
+            const condition = document.getElementById('hairCondition').value;
+            const weight = document.getElementById('hairWeight').value;
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            submitBtn.classList.add('loading');
+            submitText.style.display = 'none';
+            submitSpinner.style.display = 'inline-block';
+            
+            try {
+                const response = await fetch('/api/applications/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        hair_color: color,
+                        hair_length: parseInt(length),
+                        hair_condition: condition,
+                        hair_weight: parseInt(weight)
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alert('✅ Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.');
+                    document.getElementById('priceForm').reset();
+                    updatePrice();
+                } else {
+                    alert('❌ Ошибка при отправке заявки. Попробуйте еще раз.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Ошибка подключения. Проверьте интернет и попробуйте снова.');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitText.style.display = 'inline';
+                submitSpinner.style.display = 'none';
+            }
+        });
+        
+        // Get CSRF Token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
