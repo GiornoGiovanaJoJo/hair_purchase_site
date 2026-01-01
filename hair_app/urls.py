@@ -24,7 +24,7 @@ urlpatterns = [
     # API endpoints
     path('api/', include([
         path('', include(router.urls)),
-        path('calculator/', views.calculate_price, name='calculator'),
+        path('calculate-price/', views.calculate_price, name='calculator'),
         path('price-list/', views.price_list, name='price-list'),
     ])),
 ]
