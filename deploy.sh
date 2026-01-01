@@ -17,10 +17,10 @@ echo -e "${YELLOW}[0/5] Activating virtual environment...${NC}"
 source venv/bin/activate || exit 1
 echo -e "${GREEN}✅ Venv activated${NC}"
 
-# 1. Git pull with GIT_TERMINAL_PROMPT=0 to prevent password prompt
+# 1. Git pull using SSH (deploy key)
 echo -e "${YELLOW}[1/5] Pulling code...${NC}"
-GIT_TERMINAL_PROMPT=0 git fetch origin main || exit 1
-GIT_TERMINAL_PROMPT=0 git reset --hard origin/main || exit 1
+GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy -o StrictHostKeyChecking=no" git fetch origin || exit 1
+GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy -o StrictHostKeyChecking=no" git reset --hard origin/main || exit 1
 echo -e "${GREEN}✅ Code pulled${NC}"
 
 # 2. Django check
