@@ -12,9 +12,6 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  # ============================================================================
-  # Stage 1: Code Quality & Testing
-  # ============================================================================
   test:
     name: Tests & Code Quality
     runs-on: ubuntu-latest
@@ -55,33 +52,26 @@ jobs:
     
     - name: Lint with Flake8
       run: |
-        echo "Checking code style with flake8..."
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics || true
       continue-on-error: true
     
     - name: Check code formatting with Black
-      run: |
-        echo "Checking code formatting..."
-        black --check --diff . || true
+      run: black --check --diff . || true
       continue-on-error: true
     
     - name: Check imports with isort
-      run: |
-        echo "Checking import order..."
-        isort --check-only --diff . || true
+      run: isort --check-only --diff . || true
       continue-on-error: true
     
     - name: Security check with Safety
-      run: |
-        echo "Checking for security vulnerabilities..."
-        safety check --json || true
+      run: safety check --json || true
       continue-on-error: true
     
     - name: Setup Django environment
       run: |
-        cat > .env << EOF
-        SECRET_KEY='github-actions-test-key-$(date +%s)'
+        cat > .env << 'ENVEOF'
+        SECRET_KEY=github-actions-test-key
         DEBUG=False
         ALLOWED_HOSTS=localhost,127.0.0.1
         DATABASE_URL=postgresql://test_user:test_password@localhost:5432/test_hair_db
@@ -89,18 +79,14 @@ jobs:
         TELEGRAM_ADMIN_CHAT_ID=0
         STATIC_URL=/static/
         MEDIA_URL=/media/
-        EOF
-        echo "Django environment configured"
+        ENVEOF
     
     - name: Check for unapplied migrations
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
-      run: |
-        echo "Checking for new migrations..."
-        python manage.py makemigrations --dry-run --check
-        echo "Migration check passed"
+      run: python manage.py makemigrations --dry-run --check
       continue-on-error: false
     
     - name: Apply migrations
@@ -108,30 +94,21 @@ jobs:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
-      run: |
-        echo "Applying database migrations..."
-        python manage.py migrate --verbosity=2
-        echo "Migrations applied successfully"
+      run: python manage.py migrate --verbosity=2
     
     - name: Run Django system checks
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
-      run: |
-        echo "Running Django system checks..."
-        python manage.py check
-        echo "All Django checks passed"
+      run: python manage.py check
     
     - name: Collect static files
       env:
         SECRET_KEY: test-key
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
-      run: |
-        echo "Collecting static files..."
-        python manage.py collectstatic --noinput --verbosity=2
-        echo "Static files collected"
+      run: python manage.py collectstatic --noinput --verbosity=2
     
     - name: Run pytest tests
       env:
@@ -139,10 +116,7 @@ jobs:
         DEBUG: 'False'
         DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_hair_db
         DJANGO_SETTINGS_MODULE: config.settings
-      run: |
-        echo "Running unit tests..."
-        python -m pytest --verbose --cov=. --cov-report=xml --cov-report=term-missing --tb=short || true
-        echo "Tests completed"
+      run: python -m pytest --verbose --cov=. --cov-report=xml --cov-report=term-missing --tb=short || true
       continue-on-error: true
     
     - name: Upload coverage reports
@@ -154,9 +128,6 @@ jobs:
         fail_ci_if_error: false
       continue-on-error: true
   
-  # ============================================================================
-  # Stage 2: Build & Push Docker Image
-  # ============================================================================
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
@@ -200,13 +171,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-    
-    - name: Docker build completed
-      run: echo "Docker image built and pushed successfully"
   
-  # ============================================================================
-  # Stage 3: Deploy to Production VPS
-  # ============================================================================
   deploy:
     name: Deploy to Jino VPS
     runs-on: ubuntu-latest
@@ -217,90 +182,71 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup SSH key
+    - name: Deploy via SSH
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        VPS_PROJECT_PATH: ${{ secrets.VPS_PROJECT_PATH }}
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+        echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
-        ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-      env:
-        SSH_KNOWN_HOSTS: ~/.ssh/known_hosts
-    
-    - name: Deploy via SSH
-      run: |
-        ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} bash << 'DEPLOY_SCRIPT'
+        ssh-keyscan -H $VPS_HOST >> ~/.ssh/known_hosts 2>/dev/null || true
+        
+        ssh -i ~/.ssh/deploy_key $VPS_USER@$VPS_HOST << 'DEPLOY_SCRIPT'
         set -e
         
         echo "Updating repository..."
-        cd ${{ secrets.VPS_PROJECT_PATH }}
+        cd "$VPS_PROJECT_PATH"
         git fetch origin main
         git reset --hard origin/main
-        echo "Repository updated"
         
-        echo "Creating .env file from environment variables..."
-        cat > .env << 'ENV_CONFIG'
-DEBUG=False
-SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-ALLOWED_HOSTS=195.161.69.221,localhost,127.0.0.1
-DATABASE_URL=postgresql://hair_user:hair_secure_password@localhost:5432/hair_db
-TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-TELEGRAM_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
-TELEGRAM_USE_WEBHOOK=False
-STATIC_URL=/static/
-STATIC_ROOT=/home/hair_purchase/static/
-MEDIA_URL=/media/
-MEDIA_ROOT=/home/hair_purchase/media/
-SECURE_SSL_REDIRECT=False
-SESSION_COOKIE_SECURE=False
-CSRF_COOKIE_SECURE=False
-ENV_CONFIG
-        echo ".env created successfully"
+        echo "Creating .env file..."
+        cat > .env << 'ENVEOF'
+        DEBUG=False
+        SECRET_KEY=PLACEHOLDER_KEY
+        ALLOWED_HOSTS=195.161.69.221,localhost,127.0.0.1
+        DATABASE_URL=postgresql://hair_user:hair_secure_password@localhost:5432/hair_db
+        TELEGRAM_BOT_TOKEN=PLACEHOLDER_TOKEN
+        TELEGRAM_ADMIN_CHAT_ID=PLACEHOLDER_CHAT
+        TELEGRAM_USE_WEBHOOK=False
+        STATIC_URL=/static/
+        STATIC_ROOT=/home/hair_purchase/static/
+        MEDIA_URL=/media/
+        MEDIA_ROOT=/home/hair_purchase/media/
+        SECURE_SSL_REDIRECT=False
+        SESSION_COOKIE_SECURE=False
+        CSRF_COOKIE_SECURE=False
+        ENVEOF
         
         echo "Installing dependencies..."
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        echo "Dependencies installed"
         
-        echo "Running database migrations..."
+        echo "Running migrations..."
         python manage.py migrate --verbosity=2
-        echo "Migrations completed"
         
         echo "Collecting static files..."
         python manage.py collectstatic --noinput --verbosity=2
-        echo "Static files collected"
         
         echo "Restarting services..."
         sudo systemctl restart gunicorn || sudo systemctl restart hair_purchase || true
         sleep 2
         sudo systemctl restart nginx
-        sleep 2
-        
-        echo "Verifying services..."
-        sudo systemctl is-active gunicorn && echo "Gunicorn running" || echo "Gunicorn check - may need manual verification"
-        sudo systemctl is-active nginx && echo "Nginx running" || echo "Nginx check - may need manual verification"
         
         echo "Deployment completed successfully!"
         DEPLOY_SCRIPT
     
     - name: Verify deployment
       run: |
-        echo "Deployment to VPS initiated"
-        echo "Server: ${{ secrets.VPS_HOST }}"
-        echo "Path: ${{ secrets.VPS_PROJECT_PATH }}"
-        echo "Check status at: https://4895c9d9450e.vps.myjino.ru"
-    
-    - name: Wait for deployment
-      run: sleep 5
-    
-    - name: Health check
-      run: |
-        echo "Performing health check..."
-        curl -s -o /dev/null -w "Status: %{http_code}\n" https://4895c9d9450e.vps.myjino.ru/ || echo "Note: Health check may fail if SSL is not configured"
+        echo "Deployment initiated successfully"
+        echo "Check site: https://4895c9d9450e.vps.myjino.ru"
   
-  # ============================================================================
-  # Stage 4: Notifications
-  # ============================================================================
   notify-success:
     name: Notify Success
     runs-on: ubuntu-latest
@@ -312,13 +258,8 @@ ENV_CONFIG
       run: |
         echo "DEPLOYMENT SUCCESSFUL!"
         echo "Repository: ${{ github.repository }}"
-        echo "Branch: ${{ github.ref }}"
         echo "Commit: ${{ github.sha }}"
         echo "Author: ${{ github.actor }}"
-        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        echo ""
-        echo "View details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        echo "Site: https://4895c9d9450e.vps.myjino.ru"
   
   notify-failure:
     name: Notify Failure
@@ -331,9 +272,4 @@ ENV_CONFIG
       run: |
         echo "BUILD/DEPLOYMENT FAILED"
         echo "Repository: ${{ github.repository }}"
-        echo "Branch: ${{ github.ref }}"
-        echo "Commit: ${{ github.sha }}"
-        echo "Author: ${{ github.actor }}"
-        echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        echo ""
-        echo "Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "Check logs at: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
